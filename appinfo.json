@@ -1,0 +1,16 @@
+{
+	"title": "Ignore This Icon",
+	"id": "org.webosinternals.ipkgservice",
+	"version": "0.6.0",
+	"release_date":	"19-Aug-2009",
+	"vendor": "WebOS Internals",
+	"vendor_email":	"support@webos-internals.org",
+	"vendor_url": "http://www.webos-internals.org/wiki/Application:Preware",
+	"type": "lib",
+	"main": "index.html",
+	"removable": "false",
+	"noWindow": true,
+	"theme" : "light",
+	"noDeprecatedStyles" : true,
+	"visible": false 
+}

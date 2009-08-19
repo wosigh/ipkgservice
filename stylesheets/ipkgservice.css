@@ -1,0 +1,134 @@
+/*
+ * Confirmation Window Styles
+ */
+
+.confirmWindow
+{
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 8px;
+}
+
+.confirmWindow .message
+{
+	padding-left: 10px;
+	padding-right: 5px;
+	font-size: 16px;
+}
+.confirmWindow .message .palm-dashboard-icon.alert
+{
+	width: 60px;
+	height: 60px;
+	float: left;
+	margin-left: 12px;
+}
+.confirmWindow .message .palm-dashboard-icon.alert
+{
+	float: left;
+	width: 60px;
+	height: 60px;
+	margin-left: 12px;
+}
+.confirmWindow .message #description
+{
+	font-weight: bold;
+}
+.confirmWindow #ok-button
+{
+	float: left;
+	width: 32%;
+}
+.confirmWindow #view-button
+{
+	float: left;
+	width: 32%;
+	margin-left: 5px;
+}
+.confirmWindow #cancel-button
+{
+	float: left;
+	width: 33%;
+	margin-left: 5px;
+}
+
+
+
+/*
+ * Scripe View Styles
+ */
+
+.scriptView #scriptScroller
+{
+	position: fixed;
+	top: 50px;
+	left: 0px;
+	height: 340px;
+	width: 320px;
+}
+.scriptView #scriptScroller #script
+{
+	padding: 10px;
+	font-size: 17px;
+	overflow: visible;
+	white-space: nowrap;
+	height: 100%;
+	width: 100%;
+}
+.scriptView #scriptScroller .fade-top
+{
+	position: fixed; 
+	top: 50px; 
+	z-index: 11000;
+	height: 30px; 
+	width: 100%;
+	background: url(../images/scroll-top.png) top center repeat-x;
+	-webkit-palm-mouse-target: ignore;
+}
+.scriptView #scriptScroller .fade-bottom
+{
+	position: fixed; 
+	top: 360px;
+	z-index: 11000;
+	height: 30px; 
+	width: 100%;
+	background: url(../images/scroll-bottom.png) bottom center repeat-x;
+	-webkit-palm-mouse-target: ignore;
+}
+.scriptView #scriptScroller .fade-left
+{
+	position: fixed; 
+	left: 0; 
+	z-index: 11000;
+	height: 100%;
+	width: 30px; 
+	background: url(../images/scroll-left.png) top center repeat-y;
+	-webkit-palm-mouse-target: ignore;
+}
+.scriptView #scriptScroller .fade-right
+{
+	position: fixed; 
+	right: 0; 
+	z-index: 11000;
+	height: 100%;
+	width: 30px; 
+	background: url(../images/scroll-right.png) bottom center repeat-y;
+	-webkit-palm-mouse-target: ignore;
+}
+.scriptView .buttons
+{
+	position: fixed;
+	z-index: 11001;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+}
+.scriptView .buttons #ok-button
+{
+	float: left;
+	width: 50%;
+}
+.scriptView .buttons #cancel-button
+{
+	float: left;
+	width: 50%;
+}

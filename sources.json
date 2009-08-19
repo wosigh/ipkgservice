@@ -1,0 +1,12 @@
+[
+    {"source": "app\/assistants\/app-assistant.js"},
+    {"source": "app\/models\/IPKGService.js"},
+    {
+        "source": "app\/assistants\/confirm-window-assistant.js",
+        "scenes": "confirm-window"
+    },
+    {
+        "source": "app\/assistants\/script-view-assistant.js",
+        "scenes": "script-view"
+    }
+]

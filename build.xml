@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="IPKGService" default="build" basedir=".">
+	<target name="clean">
+		<delete file="org.webosinternals.ipkgservice.jar"/>
+	</target>
+	<target name="build">
+		<javac 
+			classpath="serviceframework.jar:lunaservice.jar:json.jar:Utils.jar"
+			srcdir="."
+			destdir="."
+		/>
+ 	</target>
+	<target name="jar" depends="build">
+		<jar
+			destfile="org.webosinternals.ipkgservice.jar"
+			basedir="."
+			includes="**/*.class"
+		/>
+    </target>
+</project>

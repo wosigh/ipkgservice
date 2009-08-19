@@ -1,0 +1,86 @@
+function ConfirmWindowAssistant(params)
+{
+	// we will need these later
+	this.params = params;
+	
+	// this is so deactivate will know if we've sent a command or not
+	this.sentCommand = false;
+}
+
+ConfirmWindowAssistant.prototype.setup = function()
+{
+	// fill in description
+	if (!this.params.description) this.params.description = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.description;
+	
+	// setup buttons
+	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
+    Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
+	this.controller.setupWidget('view-button', {}, {buttonLabel: 'View'});
+    Mojo.Event.listen(this.controller.get('view-button'), Mojo.Event.tap, this.viewButton.bind(this));
+	this.controller.setupWidget('cancel-button', {}, {buttonLabel: 'Cancel', buttonClass: 'negative'});
+    Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
+}
+
+ConfirmWindowAssistant.prototype.okButton = function()
+{
+	// send ok command here
+	console.log('Popup [Ok Button]');
+	// if the ok is successful
+	this.sentCommand = true;
+	
+	// close the popup
+	this.controller.window.close();
+}
+
+ConfirmWindowAssistant.prototype.viewButton = function()
+{
+	// set this even though we're not sending a command,
+	// but we expect the script view scene to do something
+	this.sentCommand = true;
+	
+	// launch script view scene
+	var stageName = "ipkgscriptview-" + Date.now();
+	this.controller.stageController.getAppController().createStageWithCallback({name: stageName, lightweight: true}, this.pushView.bind(this));
+	
+	// close the popup
+	this.controller.window.close();
+}
+
+ConfirmWindowAssistant.prototype.pushView = function(stageController)
+{
+	// push view scene
+    stageController.pushScene({name: "scriptView", sceneTemplate: "script-view/script-view-scene"}, this.params);
+};
+
+ConfirmWindowAssistant.prototype.cancelButton = function()
+{
+	// send cancel command here
+	console.log('Popup [Cancel Button]');
+	// if the cancel is successful
+	this.sentCommand = true;
+	
+	// close the popup
+	this.controller.window.close();
+}
+
+ConfirmWindowAssistant.prototype.activate = function(event) {}
+
+ConfirmWindowAssistant.prototype.deactivate = function(event)
+{
+	// if we haven't sent a command, we should send a cancel.
+	// this would happen if they hit the home button or used the back gesture.
+	if (!this.sentCommand)
+	{
+		// send cancel command here
+		console.log('Popup [Cancel Gesture]');
+	}
+}
+
+ConfirmWindowAssistant.prototype.cleanup = function(event)
+{
+	// cleanup our event listeners
+    Mojo.Event.stopListening(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
+    Mojo.Event.stopListening(this.controller.get('view-button'), Mojo.Event.tap, this.viewButton.bind(this));
+    Mojo.Event.stopListening(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
+}

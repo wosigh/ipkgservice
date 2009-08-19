@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="json.jar"/>
+	<classpathentry kind="lib" path="lunaservice.jar"/>
+	<classpathentry kind="lib" path="serviceframework.jar"/>
+	<classpathentry kind="lib" path="Utils.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
