@@ -337,7 +337,7 @@ public class IPKGService extends LunaServiceThread {
 		}		
 	}
 
-	private JSONObject install(String packageName)
+	private JSONObject doInstall(String packageName)
 	throws JSONException, LSException {
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
 		if (ret.returnValue==0) {
@@ -455,7 +455,7 @@ public class IPKGService extends LunaServiceThread {
 			if (msg.getJSONPayload().has("package")) {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
-					JSONObject reply = install(pkg);
+					JSONObject reply = doInstall(pkg);
 					if (reply!=null)
 						msg.respond(reply.toString());
 					else

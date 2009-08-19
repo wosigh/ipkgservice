@@ -13,5 +13,6 @@
 	</buildSpec>
 	<natures>
 		<nature>com.palm.pdt.nature</nature>
+                <nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 </projectDescription>
