@@ -7,7 +7,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
@@ -31,6 +33,7 @@ public class IPKGService extends LunaServiceThread {
 	File ipkgconfdir;
 	boolean ipkgReady = false;
 	SessionIDGenerator idgen = new SessionIDGenerator();
+	private HashMap<String, Boolean> confirmations = new HashMap<String, Boolean>();
 
 	/**
 	 * An object to hold the return value and stdout of the executed command.
@@ -328,31 +331,41 @@ public class IPKGService extends LunaServiceThread {
 		}
 	}
 	
-	private class ConfirmationThread implements Runnable {
-		private Thread ipkgServiceThread;
-		public ConfirmationThread(Thread ipkgServiceThread) {
-			this.ipkgServiceThread = ipkgServiceThread;
-		}
-		public void run() {
-		}		
-	}
+	public void confirmationLaunchCallback(ServiceMessage msg) {}
 
-	private JSONObject doInstall(String packageName)
-	throws JSONException, LSException {
+	private synchronized JSONObject doInstall(String packageName)
+	throws JSONException, LSException, NoSuchAlgorithmException {
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
 		if (ret.returnValue==0) {
-			File postinst = new File(ipkgPostinstBasePath + packageName + ".postinst");
-			if (postinst.exists()) {
-				String script = readFile(postinst, "\n");
-				new ConfirmationThread(this).run();
-				try {
-					this.wait();
-				} catch (InterruptedException e) {
-					System.err.println(e);
-				}
-			}
 			JSONObject reply = new JSONObject();
-			reply.put("returnVal",ret.returnValue);
+			String postinstPath = ipkgPostinstBasePath + packageName + ".postinst";
+			File postinst = new File(postinstPath);
+			if (postinst.exists()) {
+				String script = readFile(postinst, "<br>");
+				JSONObject parameters = new JSONObject();
+				JSONObject params =  new JSONObject();
+				String hash = idgen.nextSessionId();
+				params.append("package", packageName);
+				params.append("script", script);
+				params.append("hash", hash);
+				parameters.append("id","org.webosinternals.ipkgservice");
+				parameters.append("params", params);
+				sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+				while (!confirmations.containsKey(hash)) {
+					Thread.yield();
+				}
+				boolean confirmation = confirmations.get(hash);
+				if (confirmation) {
+					ReturnResult retPostinst = executeCMD("chmod +x " + postinst);
+					if (retPostinst.returnValue==0) {
+						retPostinst = executeCMD(postinstPath);
+						reply.put("returnVal",retPostinst.returnValue);						
+					} else {
+						return remove(packageName);
+					}
+				}
+			} else
+				reply.put("returnVal",ret.returnValue);
 			return reply;
 		} else
 			return null;
@@ -450,7 +463,7 @@ public class IPKGService extends LunaServiceThread {
 
 	@LunaServiceThread.PublicMethod
 	public void install(ServiceMessage msg)
-	throws JSONException, LSException {
+	throws JSONException, LSException, NoSuchAlgorithmException {
 		if (ipkgReady) {
 			if (msg.getJSONPayload().has("package")) {
 				String pkg = msg.getJSONPayload().getString("package").trim();
@@ -563,6 +576,21 @@ public class IPKGService extends LunaServiceThread {
 		if (ipkgReady) {
 			if (msg.getJSONPayload().has("config")) {
 				msg.respond(toggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
+			} else
+				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+		} else
+			ipkgDirNotReady(msg);
+	}
+	
+	@LunaServiceThread.PublicMethod
+	public void sendConfirmation(ServiceMessage msg)
+	throws JSONException, LSException {
+		if (ipkgReady) {
+			if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
+				confirmations.put(msg.getJSONPayload().getString("hash"), msg.getJSONPayload().getBoolean("confirmation"));
+				JSONObject reply = new JSONObject();
+				reply.put("returnVal", 0);
+				msg.respond(reply.toString());
 			} else
 				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
 		} else
