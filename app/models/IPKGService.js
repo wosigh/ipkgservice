@@ -87,3 +87,14 @@ IPKGService.remove = function(callback, pkg) {
 	});
 	return request;
 }
+
+IPKGService.sendConfirmation = function(callback, hash, confirmation) {
+	var request = new Mojo.Service.Request(IPKGService.identifier, {
+		method: 'sendConfirmation',
+		parameters: {"hash":hash,"confirmation":confirmation},
+		onSuccess: callback,
+		onFailure: callback
+	});
+	return request;
+}
+

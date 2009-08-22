@@ -10,8 +10,8 @@ function ConfirmWindowAssistant(params)
 ConfirmWindowAssistant.prototype.setup = function()
 {
 	// fill in description
-	if (!this.params.description) this.params.description = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.description;
+	if (!this.params.packageId) this.params.packageId = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.packageId;
 	
 	// setup buttons
 	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
@@ -26,6 +26,8 @@ ConfirmWindowAssistant.prototype.okButton = function()
 {
 	// send ok command here
 	console.log('Popup [Ok Button]');
+	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	
 	// if the ok is successful
 	this.sentCommand = true;
 	
@@ -57,11 +59,19 @@ ConfirmWindowAssistant.prototype.cancelButton = function()
 {
 	// send cancel command here
 	console.log('Popup [Cancel Button]');
+	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	
 	// if the cancel is successful
 	this.sentCommand = true;
 	
 	// close the popup
 	this.controller.window.close();
+}
+
+ConfirmWindowAssistant.prototype.confirmCallback = function(payload)
+{
+	// for lack of anything better to do with the results right now
+	console.log(payload);
 }
 
 ConfirmWindowAssistant.prototype.activate = function(event) {}
@@ -74,6 +84,7 @@ ConfirmWindowAssistant.prototype.deactivate = function(event)
 	{
 		// send cancel command here
 		console.log('Popup [Cancel Gesture]');
+		IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
 }
 

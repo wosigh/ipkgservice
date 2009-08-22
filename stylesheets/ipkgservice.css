@@ -33,18 +33,26 @@
 {
 	font-weight: bold;
 }
-.confirmWindow #ok-button
+.confirmWindow .buttons
+{
+	position: fixed;
+	z-index: 11001;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+}
+.confirmWindow .buttons #ok-button
 {
 	float: left;
 	width: 32%;
 }
-.confirmWindow #view-button
+.confirmWindow .buttons #view-button
 {
 	float: left;
 	width: 32%;
 	margin-left: 5px;
 }
-.confirmWindow #cancel-button
+.confirmWindow .buttons #cancel-button
 {
 	float: left;
 	width: 33%;

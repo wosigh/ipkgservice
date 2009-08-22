@@ -10,8 +10,8 @@ function ScriptViewAssistant(params)
 ScriptViewAssistant.prototype.setup = function()
 {
 	// fill in description
-	if (!this.params.description) this.params.description = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.description + ' Script';
+	if (!this.params.packageId) this.params.packageId = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.packageId + ' Script';
 	
 	// fill in script (after replacing newlines with br tags)
 	var rX = /\n/gi ;
@@ -31,6 +31,8 @@ ScriptViewAssistant.prototype.okButton = function()
 {
 	// send ok command here
 	console.log('Script View [Ok Button]');
+	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	
 	// if the ok is successful
 	this.sentCommand = true;
 	
@@ -42,11 +44,19 @@ ScriptViewAssistant.prototype.cancelButton = function()
 {
 	// send cancel command here
 	console.log('Script View [Cancel Button]');
+	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	
 	// if the cancel is successful
 	this.sentCommand = true;
 	
 	// close the popup
 	this.controller.window.close();
+}
+
+ConfirmWindowAssistant.prototype.confirmCallback = function(payload)
+{
+	// for lack of anything better to do with the results right now
+	console.log(payload);
 }
 
 ScriptViewAssistant.prototype.activate = function(event) {}
@@ -59,6 +69,7 @@ ScriptViewAssistant.prototype.deactivate = function(event)
 	{
 		// send cancel command here
 		console.log('Script View [Card Discard]');
+		IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
 }
 
