@@ -56,14 +56,16 @@ public class IPKGService extends LunaServiceThread {
 	private HashMap<String, Boolean> confirmations = new HashMap<String, Boolean>();
 
 	/**
-	 * An object to hold the return value and stdout of the executed command.
+	 * An object to hold the return value, stdout and stderr of the executed command.
 	 */
 	private class ReturnResult {
 		int returnValue;
 		ArrayList<String> stdOut;
-		public ReturnResult(int returnValue, ArrayList<String> stdOut) {
+		ArrayList<String> stdErr;
+		public ReturnResult(int returnValue, ArrayList<String> stdOut, ArrayList<String> stdErr) {
 			this.returnValue = returnValue;
 			this.stdOut = stdOut;
+			this.stdErr = stdErr;
 		}
 	}
 	
@@ -82,7 +84,7 @@ public class IPKGService extends LunaServiceThread {
 	}
 
 	private final void ipkgDirNotReady(ServiceMessage msg) throws LSException {
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "Fatal ipkg configuration failure");
 	}
 
 	/**
@@ -160,23 +162,31 @@ public class IPKGService extends LunaServiceThread {
 	 * A function to execute system commands.
 	 * 
 	 * @param command The system command to execute
-	 * @return A ReturnResult object containing the return value and stdout of
+	 * @return A ReturnResult object containing the return value, stdout and stderr of
 	 * of the executed command.
 	 */
 	private ReturnResult executeCMD(String command) {
 		int ret = 1;
 		ArrayList<String> output = new ArrayList<String>();
+		ArrayList<String> errors = new ArrayList<String>();
 		if (checkArg(command)) {
 			try {
 				Process p = runtime.exec(command);
-				InputStream in = p.getInputStream();
-				BufferedInputStream buf = new BufferedInputStream(in);
-				InputStreamReader inread = new InputStreamReader(buf);
-				BufferedReader bufferedreader = new BufferedReader(inread);
-
+				InputStream stdout = p.getInputStream();
+				BufferedInputStream stdoutbuf = new BufferedInputStream(stdout);
+				InputStreamReader stdoutreader = new InputStreamReader(stdoutbuf);
+				BufferedReader bufferedstdoutreader = new BufferedReader(stdoutreader);
+				InputStream stderr = p.getErrorStream();
+				BufferedInputStream stderrbuf = new BufferedInputStream(stderr);
+				InputStreamReader stderrreader = new InputStreamReader(stderrbuf);
+				BufferedReader bufferedstderrreader = new BufferedReader(stderrreader);
+				
 				String line;
-				while ((line = bufferedreader.readLine()) != null) {
+				while ((line = bufferedstdoutreader.readLine()) != null) {
 					output.add(line);
+				}
+				while ((line = bufferedstderrreader.readLine()) != null) {
+					errors.add(line);
 				}
 
 				try {
@@ -187,16 +197,20 @@ public class IPKGService extends LunaServiceThread {
 				} catch (InterruptedException e) {
 					System.err.println(e);
 				} finally {
-					bufferedreader.close();
-					inread.close();
-					buf.close();
-					in.close();
+					bufferedstdoutreader.close();
+					stdoutreader.close();
+					stdoutbuf.close();
+					stdout.close();
+					bufferedstderrreader.close();
+					stderrreader.close();
+					stderrbuf.close();
+					stderr.close();
 				}
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}
 		}
-		return new ReturnResult(ret, output);
+		return new ReturnResult(ret, output, errors);
 	}
 
 	private JSONObject getConfigs()
@@ -341,23 +355,27 @@ public class IPKGService extends LunaServiceThread {
 
 	private JSONObject update()
 	throws JSONException, LSException {
+		JSONObject reply = new JSONObject();
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "update");
+		reply.put("outputText", ret.stdOut.toString());
+		reply.put("errorText", ret.stdErr.toString());
 		if (ret.returnValue==0) {
-			JSONObject reply = new JSONObject();
 			reply.put("returnVal",ret.returnValue);
-			return reply;
 		} else {
-			return null;
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 		}
+		return reply;
 	}
 	
 	public void confirmationLaunchCallback(ServiceMessage msg) {}
 
 	private synchronized JSONObject doInstall(String packageName)
 	throws JSONException, LSException, NoSuchAlgorithmException {
+		JSONObject reply = new JSONObject();
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
+		reply.put("outputText", ret.stdOut.toString());
+		reply.put("errorText", ret.stdErr.toString());
 		if (ret.returnValue==0) {
-			JSONObject reply = new JSONObject();
 			String postinstPath = ipkgPostinstBasePath + packageName + ".postinst";
 			File postinst = new File(postinstPath);
 			if (postinst.exists()) {
@@ -384,60 +402,71 @@ public class IPKGService extends LunaServiceThread {
 						return remove(packageName);
 					}
 				}
-			} else
+			} else {
 				reply.put("returnVal",ret.returnValue);
-			return reply;
-		} else
-			return null;
+			}
+		} else {
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+		}
+		return reply;
 	}
 
 	private synchronized JSONObject testLaunch(String packageName)
 	throws JSONException, LSException, NoSuchAlgorithmException {
-			JSONObject reply = new JSONObject();
-				String script = "Test script string";
-				JSONObject parameters = new JSONObject();
-				JSONObject params =  new JSONObject();
-				String hash = idgen.nextSessionId();
-				params.put("package", packageName);
-				params.put("script", script);
-				params.put("hash", hash);
-				parameters.put("id","org.webosinternals.ipkgservice");
-				parameters.put("params", params);
-				sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
-			return reply;
+	    JSONObject reply = new JSONObject();
+	    String script = "Test script string";
+	    JSONObject parameters = new JSONObject();
+	    JSONObject params =  new JSONObject();
+	    String hash = idgen.nextSessionId();
+	    params.put("package", packageName);
+	    params.put("script", script);
+	    params.put("hash", hash);
+	    parameters.put("id","org.webosinternals.ipkgservice");
+	    parameters.put("params", params);
+	    sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+	    return reply;
 	}
 
 	private JSONObject remove(String packageName)
 	throws JSONException, LSException {
+		JSONObject reply = new JSONObject();
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "remove " + packageName);
+		reply.put("outputText", ret.stdOut.toString());
+		reply.put("errorText", ret.stdErr.toString());
 		if (ret.returnValue==0) {
-			JSONObject reply = new JSONObject();
 			reply.put("returnVal",ret.returnValue);
-			return reply;
-		} else
-			return null;
+		} else {
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+		}
+		return reply;
 	}
-
+   
 	private JSONObject remove_recursive(String packageName)
 	throws JSONException, LSException {
+	    	JSONObject reply = new JSONObject();
 		ReturnResult ret = executeCMD(ipkgBaseCommand + "-recursive remove " + packageName);
+		reply.put("outputText", ret.stdOut.toString());
+		reply.put("errorText", ret.stdErr.toString());
 		if (ret.returnValue==0) {
-			JSONObject reply = new JSONObject();
 			reply.put("returnVal",ret.returnValue);
-			return reply;
-		} else
-			return null;
+		} else {
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+		}
+		return reply;
 	}
 
 	private JSONObject doRescan()
 	throws JSONException, LSException {
+	    	JSONObject reply = new JSONObject();
 		ReturnResult ret = executeCMD("luna-send -n 1 palm://com.palm.applicationManager/rescan {}");
+		reply.put("outputText", ret.stdOut.toString());
+		reply.put("errorText", ret.stdErr.toString());
 		if (ret.returnValue==0) {
-			JSONObject reply = new JSONObject();
 			reply.put("returnVal",ret.returnValue);
-			return reply;
-		} else
-			return null;
+		} else {
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+		}
+		return reply;
 	}
 
 	/* ============================ DBUS Methods =============================*/
@@ -505,13 +534,10 @@ public class IPKGService extends LunaServiceThread {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
 					JSONObject reply = doInstall(pkg);
-					if (reply!=null)
-						msg.respond(reply.toString());
-					else
-						msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+					msg.respond(reply.toString());
 				}
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'package' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -524,13 +550,10 @@ public class IPKGService extends LunaServiceThread {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
 					JSONObject reply = testLaunch(pkg);
-					if (reply!=null)
-						msg.respond(reply.toString());
-					else
-						msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+					msg.respond(reply.toString());
 				}
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'package' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -543,13 +566,10 @@ public class IPKGService extends LunaServiceThread {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
 					JSONObject reply = remove(pkg);
-					if (reply!=null)
-						msg.respond(reply.toString());
-					else
-						msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+					msg.respond(reply.toString());
 				}
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'package' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -562,13 +582,10 @@ public class IPKGService extends LunaServiceThread {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
 					JSONObject reply = remove_recursive(pkg);
-					if (reply!=null)
-						msg.respond(reply.toString());
-					else
-						msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+					msg.respond(reply.toString());
 				}
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'package' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -578,10 +595,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 		if (ipkgReady) {
 			JSONObject reply = update();
-			if (reply!=null)
-				msg.respond(reply.toString());
-			else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+			msg.respond(reply.toString());
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -604,10 +618,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 		if (ipkgReady) {
 			JSONObject reply = doRescan();
-			if (reply!=null)
-				msg.respond(reply.toString());
-			else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+			msg.respond(reply.toString());
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -632,7 +643,7 @@ public class IPKGService extends LunaServiceThread {
 			if (msg.getJSONPayload().has("config")) {
 				msg.respond(toggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'config' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
@@ -647,7 +658,7 @@ public class IPKGService extends LunaServiceThread {
 				reply.put("returnVal", 0);
 				msg.respond(reply.toString());
 			} else
-				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER, "Missing 'hash' or 'confirmation' parameter");
 		} else
 			ipkgDirNotReady(msg);
 	}
