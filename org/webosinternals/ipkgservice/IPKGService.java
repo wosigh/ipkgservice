@@ -345,11 +345,11 @@ public class IPKGService extends LunaServiceThread {
 				JSONObject parameters = new JSONObject();
 				JSONObject params =  new JSONObject();
 				String hash = idgen.nextSessionId();
-				params.append("package", packageName);
-				params.append("script", script);
-				params.append("hash", hash);
-				parameters.append("id","org.webosinternals.ipkgservice");
-				parameters.append("params", params);
+				params.put("package", packageName);
+				params.put("script", script);
+				params.put("hash", hash);
+				parameters.put("id","org.webosinternals.ipkgservice");
+				parameters.put("params", params);
 				sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
 				while (!confirmations.containsKey(hash)) {
 					Thread.yield();
@@ -369,6 +369,22 @@ public class IPKGService extends LunaServiceThread {
 			return reply;
 		} else
 			return null;
+	}
+
+	private synchronized JSONObject testLaunch(String packageName)
+	throws JSONException, LSException, NoSuchAlgorithmException {
+			JSONObject reply = new JSONObject();
+				String script = "Test script string";
+				JSONObject parameters = new JSONObject();
+				JSONObject params =  new JSONObject();
+				String hash = idgen.nextSessionId();
+				params.put("package", packageName);
+				params.put("script", script);
+				params.put("hash", hash);
+				parameters.put("id","org.webosinternals.ipkgservice");
+				parameters.put("params", params);
+				sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+			return reply;
 	}
 
 	private JSONObject remove(String packageName)
@@ -469,6 +485,25 @@ public class IPKGService extends LunaServiceThread {
 				String pkg = msg.getJSONPayload().getString("package").trim();
 				if (checkArg(pkg)) {
 					JSONObject reply = doInstall(pkg);
+					if (reply!=null)
+						msg.respond(reply.toString());
+					else
+						msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+				}
+			} else
+				msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION, "You fail!");
+		} else
+			ipkgDirNotReady(msg);
+	}
+
+	@LunaServiceThread.PublicMethod
+	public void launch(ServiceMessage msg)
+	throws JSONException, LSException, NoSuchAlgorithmException {
+		if (ipkgReady) {
+			if (msg.getJSONPayload().has("package")) {
+				String pkg = msg.getJSONPayload().getString("package").trim();
+				if (checkArg(pkg)) {
+					JSONObject reply = testLaunch(pkg);
 					if (reply!=null)
 						msg.respond(reply.toString());
 					else
