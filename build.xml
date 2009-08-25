@@ -17,4 +17,10 @@
 			includes="**/*.class"
 		/>
     </target>
+	<target name="upload" depends="jar">
+		 <exec executable="scp">
+		    <arg value="org.webosinternals.ipkgservice.jar"/>
+		    <arg value="root@webos:/usr/lib/luna/java/"/>
+		  </exec>
+	</target>
 </project>
