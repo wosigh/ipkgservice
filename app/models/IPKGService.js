@@ -88,9 +88,19 @@ IPKGService.remove = function(callback, pkg) {
 	return request;
 }
 
-IPKGService.sendConfirmation = function(callback, hash, confirmation) {
+IPKGService.confirmInstall = function(callback, hash, confirmation) {
 	var request = new Mojo.Service.Request(IPKGService.identifier, {
-		method: 'sendConfirmation',
+		method: 'confirmInstall',
+		parameters: {"hash":hash,"confirmation":confirmation},
+		onSuccess: callback,
+		onFailure: callback
+	});
+	return request;
+}
+
+IPKGService.confirmRemove = function(callback, hash, confirmation) {
+	var request = new Mojo.Service.Request(IPKGService.identifier, {
+		method: 'confirmRemove',
 		parameters: {"hash":hash,"confirmation":confirmation},
 		onSuccess: callback,
 		onFailure: callback

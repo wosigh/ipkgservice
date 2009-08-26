@@ -10,28 +10,33 @@ function ScriptViewAssistant(params)
 ScriptViewAssistant.prototype.setup = function()
 {
 	// fill in description
-	if (!this.params.packageId) this.params.packageId = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.packageId + ' Script';
+	if (!this.params.package) this.params.package = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.package;
 	
-	// fill in script (after replacing newlines with br tags)
-	var rX = /\n/gi ;
-	this.controller.get('script').innerHTML = this.params.script.replace(/\n/gi, "<br />");
+	// fill in script
+	this.controller.get('script').innerHTML = this.params.script;
 	
 	// setup scroller
 	this.controller.setupWidget('scriptScroller', {mode: 'dominant'});
 	
 	// setup buttons
 	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
-    Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
+	Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
 	this.controller.setupWidget('cancel-button', {}, {buttonLabel: 'Cancel', buttonClass: 'negative'});
-    Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
+	Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
 }
 
 ScriptViewAssistant.prototype.okButton = function()
 {
 	// send ok command here
 	console.log('Script View [Ok Button]');
-	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+
+	if (this.params.type === "install") {
+	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	}
+	if (this.params.type === "remove") {
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	}
 	
 	// if the ok is successful
 	this.sentCommand = true;
@@ -44,7 +49,13 @@ ScriptViewAssistant.prototype.cancelButton = function()
 {
 	// send cancel command here
 	console.log('Script View [Cancel Button]');
-	IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+
+	if (this.params.type === "install") {
+	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	}
+	if (this.params.type === "remove") {
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	}
 	
 	// if the cancel is successful
 	this.sentCommand = true;
@@ -69,7 +80,13 @@ ScriptViewAssistant.prototype.deactivate = function(event)
 	{
 		// send cancel command here
 		console.log('Script View [Card Discard]');
-		IPKGService.sendConfirmation(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+
+		if (this.params.type === "install") {
+		    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+		}
+		if (this.params.type === "remove") {
+		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+		}
 	}
 }
 
