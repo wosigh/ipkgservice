@@ -10,8 +10,8 @@ function ConfirmWindowAssistant(params)
 ConfirmWindowAssistant.prototype.setup = function()
 {
 	// fill in description
-	if (!this.params.package) this.params.package = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.package;
+	if (!this.params.title) this.params.title = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.title;
 	
 	// setup buttons
 	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});

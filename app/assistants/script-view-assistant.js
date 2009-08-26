@@ -10,8 +10,8 @@ function ScriptViewAssistant(params)
 ScriptViewAssistant.prototype.setup = function()
 {
 	// fill in description
-	if (!this.params.package) this.params.package = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.package;
+	if (!this.params.title) this.params.title = 'Unnamed';
+	this.controller.get('description').innerHTML = this.params.title;
 	
 	// fill in script
 	this.controller.get('script').innerHTML = this.params.script;
