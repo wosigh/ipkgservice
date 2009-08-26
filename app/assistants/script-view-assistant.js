@@ -64,7 +64,7 @@ ScriptViewAssistant.prototype.cancelButton = function()
 	this.controller.window.close();
 }
 
-ConfirmWindowAssistant.prototype.confirmCallback = function(payload)
+ScriptViewAssistant.prototype.confirmCallback = function(payload)
 {
 	// for lack of anything better to do with the results right now
 	console.log(payload);
