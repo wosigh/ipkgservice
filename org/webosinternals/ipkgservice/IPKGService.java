@@ -375,7 +375,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName, msg);
 	reply.put("returnVal",ret.returnValue);
-	reply.put("stage","installed");
+	reply.put("stage","completed");
 	reply.put("stdOut", ret.stdOut);
 	reply.put("stdError", ret.stdErr);
 	if (ret.returnValue==0) {
@@ -640,7 +640,7 @@ public class IPKGService extends LunaServiceThread {
 				    System.err.println("running postinst");
 				    ReturnResult ret = executeCMD(postinstPath, msg);
 				    reply.put("returnVal",ret.returnValue);
-				    reply.put("stage","installed");
+				    reply.put("stage","completed");
 				    reply.put("stdOut", ret.stdOut);
 				    reply.put("stdError", ret.stdErr);
 				    origmsg.respond(reply.toString());
