@@ -369,7 +369,7 @@ public class IPKGService extends LunaServiceThread {
 	
     public void confirmationLaunchCallback(ServiceMessage msg) {}
 
-    private synchronized JSONObject doInstall(String packageName, ServiceMessage msg)
+    private synchronized JSONObject doInstall(String packageName, String title, ServiceMessage msg)
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	System.err.println("Entering doInstall");
 	JSONObject reply = new JSONObject();
@@ -390,6 +390,7 @@ public class IPKGService extends LunaServiceThread {
 		JSONObject params =  new JSONObject();
 		String hash = idgen.nextSessionId();
 		params.put("package", packageName);
+		params.put("title", title);
 		params.put("type", "install");
 		params.put("script", script);
 		params.put("hash", hash);
@@ -408,7 +409,7 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doRemove(String packageName, ServiceMessage msg)
+    private JSONObject doRemove(String packageName, String title, ServiceMessage msg)
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	JSONObject reply = new JSONObject();
 	String prermPath = ipkgScriptBasePath + packageName + ".prerm";
@@ -423,6 +424,7 @@ public class IPKGService extends LunaServiceThread {
 	    JSONObject params =  new JSONObject();
 	    String hash = idgen.nextSessionId();
 	    params.put("package", packageName);
+	    params.put("title", title);
 	    params.put("type", "remove");
 	    params.put("script", script);
 	    params.put("hash", hash);
@@ -527,8 +529,9 @@ public class IPKGService extends LunaServiceThread {
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("package")) {
 		String pkg = msg.getJSONPayload().getString("package").trim();
+		String title = msg.getJSONPayload().getString("title").trim();
 		if (checkArg(pkg)) {
-		    JSONObject reply = doInstall(pkg, msg);
+		    JSONObject reply = doInstall(pkg, title, msg);
 		    msg.respond(reply.toString());
 		}
 	    } else
@@ -544,8 +547,9 @@ public class IPKGService extends LunaServiceThread {
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("package")) {
 		String pkg = msg.getJSONPayload().getString("package").trim();
+		String title = msg.getJSONPayload().getString("title").trim();
 		if (checkArg(pkg)) {
-		    JSONObject reply = doRemove(pkg, msg);
+		    JSONObject reply = doRemove(pkg, title, msg);
 		    msg.respond(reply.toString());
 		}
 	    } else
