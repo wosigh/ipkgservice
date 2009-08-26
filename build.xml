@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="IPKGService" default="jar" basedir=".">
+<project name="org.webosinternals.ipkgservice" default="jar" basedir=".">
 	<target name="clean">
 		<delete file="org.webosinternals.ipkgservice.jar"/>
 	</target>
@@ -21,6 +21,14 @@
 		 <exec executable="scp">
 		    <arg value="org.webosinternals.ipkgservice.jar"/>
 		    <arg value="root@webos:/usr/lib/luna/java/"/>
+		  </exec>
+		 <exec executable="ssh">
+		    <arg value="root@webos"/>
+		    <arg value="stop java-serviceboot"/>
+		  </exec>
+		 <exec executable="ssh">
+		    <arg value="root@webos"/>
+		    <arg value="start java-serviceboot"/>
 		  </exec>
 	</target>
 </project>
