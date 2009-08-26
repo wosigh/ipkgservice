@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="IPKGService" default="build" basedir=".">
+<project name="IPKGService" default="jar" basedir=".">
 	<target name="clean">
 		<delete file="org.webosinternals.ipkgservice.jar"/>
 	</target>
