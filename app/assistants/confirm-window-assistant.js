@@ -13,6 +13,10 @@ ConfirmWindowAssistant.prototype.setup = function()
 	if (!this.params.title) this.params.title = 'Unnamed';
 	this.controller.get('description').innerHTML = this.params.title;
 	
+	// fill in wordage for type of confirmation
+	if (this.params.type === "install") this.controller.get('type').innerHTML = ' after installation';
+	else if (this.params.type === "remove") this.controller.get('type').innerHTML = ' before removal';
+	
 	// setup buttons
 	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
     Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
