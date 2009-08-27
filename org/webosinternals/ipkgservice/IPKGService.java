@@ -379,7 +379,7 @@ public class IPKGService extends LunaServiceThread {
 	reply.put("returnVal",ret.returnValue);
 	reply.put("stage","completed");
 	reply.put("stdOut", ret.stdOut);
-	reply.put("stdError", ret.stdErr);
+	reply.put("stdErr", ret.stdErr);
 	if (ret.returnValue==0) {
 	    String postinstPath = ipkgScriptBasePath + packageName + ".postinst";
 	    File postinst = new File(postinstPath);
@@ -643,7 +643,7 @@ public class IPKGService extends LunaServiceThread {
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("stdOut", ret.stdOut);
-					reply.put("stdError", ret.stdErr);
+					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -656,7 +656,7 @@ public class IPKGService extends LunaServiceThread {
 				    origmsg.respond(reply.toString());
 				    ret = executeCMD(postinstPath);
 				    reply.put("stdOut", ret.stdOut);
-				    reply.put("stdError", ret.stdErr);
+				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
 				    if (ret.returnValue!=0) {
 					reply.put("stage","failed");
@@ -672,7 +672,7 @@ public class IPKGService extends LunaServiceThread {
 					ret = executeCMD("/bin/mount -o remount,ro /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("stdOut", ret.stdOut);
-					reply.put("stdError", ret.stdErr);
+					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -750,7 +750,7 @@ public class IPKGService extends LunaServiceThread {
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("stdOut", ret.stdOut);
-					reply.put("stdError", ret.stdErr);
+					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -763,7 +763,7 @@ public class IPKGService extends LunaServiceThread {
 				    origmsg.respond(reply.toString());
 				    ret = executeCMD(prermPath);
 				    reply.put("stdOut", ret.stdOut);
-				    reply.put("stdError", ret.stdErr);
+				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
 				    if (ret.returnValue!=0) {
 					reply.put("stage","failed");
@@ -779,7 +779,7 @@ public class IPKGService extends LunaServiceThread {
 					ret = executeCMD("/bin/mount -o remount,ro /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("stdOut", ret.stdOut);
-					reply.put("stdError", ret.stdErr);
+					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
