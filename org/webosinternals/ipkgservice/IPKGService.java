@@ -223,8 +223,11 @@ public class IPKGService extends LunaServiceThread {
 	for (File file : configs) {
 	    if (file.isFile()) {
 		String filename = file.getName();
-		if (!filename.equals("arch.conf"))
-		    cfgs.put(filename);
+		if (!filename.equals("arch.conf")) {
+		    JSONObject entry = new JSONObject();
+		    entry.put(filename, readFile(file, "<br>"));
+		    cfgs.put(entry);
+		}
 	    }
 	}
 	if (cfgs.length()>0) {

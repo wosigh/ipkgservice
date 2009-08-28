@@ -1,7 +1,7 @@
 {
-	"title": "Secure Consent Demo",
+	"title": "Package Manager Service",
 	"id": "org.webosinternals.ipkgservice",
-	"version": "0.7.4",
+	"version": "0.7.5",
 	"release_date":	"26-Aug-2009",
 	"vendor": "WebOS Internals",
 	"vendor_email":	"support@webos-internals.org",
