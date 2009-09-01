@@ -257,7 +257,7 @@ public class IPKGService extends LunaServiceThread {
 	if (ret.returnValue==0) {
 	    JSONObject list = new JSONObject();
 	    for (int i=0; i<ret.stdOut.size()-1;i++) {
-		String[] item = ret.stdOut.get(i).split(" - ");
+		String[] item = ret.stdOut.get(i).split(" - ", 2);
 		JSONObject info = new JSONObject();
 		String name = item[0].trim();
 		String version = item[1].trim();
@@ -296,7 +296,7 @@ public class IPKGService extends LunaServiceThread {
 			infoList.put(info);
 			info = new JSONObject();
 		    } else {
-			String[] item = line.split(": ");
+			String[] item = line.split(": ", 2);
 			String key = item[0].trim();
 			String value = item[1].trim();
 			info.put(key,value);
