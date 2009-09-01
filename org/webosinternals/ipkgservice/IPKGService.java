@@ -461,6 +461,20 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
+    private JSONObject doRestartServices(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	ReturnResult ret = executeCMD("stop java-serviceboot ; start java-serviceboot");
+	reply.put("returnVal",ret.returnValue);
+	reply.put("outputText", ret.stdOut.toString());
+	reply.put("errorText", ret.stdErr.toString());
+	if (ret.returnValue!=0) {
+	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+	    reply.put("errorText", "Failure during 'restartservices' operation");
+	}
+	return reply;
+    }
+
     /* ============================ DBUS Methods =============================*/
 
     @LunaServiceThread.PublicMethod
@@ -587,6 +601,16 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	if (ipkgReady) {
 	    JSONObject reply = doRescan(msg);
+	    msg.respond(reply.toString());
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void restartservices(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = doRestartServices(msg);
 	    msg.respond(reply.toString());
 	} else
 	    ipkgDirNotReady(msg);
