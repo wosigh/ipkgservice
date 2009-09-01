@@ -40,11 +40,21 @@ AppAssistant.prototype.handleLaunch = function(params) {
 				// push popup scene
 		        stageController.pushScene({name: "confirmWindow", sceneTemplate: "confirm-window/confirm-window-scene"}, launchParams);
 			};
+			var m = function(stageController)
+			{
+				// push popup scene
+		        stageController.pushScene({name: "manualOpen", sceneTemplate: "manual-open/manual-open-scene"}, launchParams);
+			};
 			
 			if (launchParams.hash && launchParams.script)
 			{
 				var stageName = "ipkgconfirmation-" + Date.now();
 				Mojo.Controller.getAppController().createStageWithCallback({name: stageName, height: 300, lightweight: true}, f, 'popupalert');
+			}
+			else
+			{
+				var stageName = "ipkgconfirmation-" + Date.now();
+				Mojo.Controller.getAppController().createStageWithCallback({name: stageName, height: 300, lightweight: true}, m, 'popupalert');
 			}
 			
 		}

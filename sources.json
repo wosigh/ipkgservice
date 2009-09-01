@@ -8,5 +8,9 @@
     {
         "source": "app\/assistants\/script-view-assistant.js",
         "scenes": "script-view"
+    },
+    {
+        "source": "app\/assistants\/manual-open-assistant.js",
+        "scenes": "manual-open"
     }
 ]
