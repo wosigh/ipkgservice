@@ -28,7 +28,7 @@ sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
 rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
 
 # Restart the service handler (this also starts org.webosinternals.ipkgservice)
-stop java-serviceboot
-start java-serviceboot
+/sbin/stop java-serviceboot
+/sbin/start java-serviceboot
 
 exit 0

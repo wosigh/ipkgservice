@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Stop the service
-stop org.webosinternals.ipkgservice
+/sbin/stop org.webosinternals.ipkgservice
 
 # Remove the java dbus service
 rm -f /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
@@ -11,7 +11,7 @@ rm -f /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
 rm -f /etc/event.d/org.webosinternals.ipkgservice
 
 # Restart the service handler
-stop java-serviceboot
-start java-serviceboot
+/sbin/stop java-serviceboot
+/sbin/start java-serviceboot
 
 exit 0
