@@ -900,7 +900,7 @@ public class IPKGService extends LunaServiceThread {
 	public void status(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
-	    JSONObject reply;
+	    JSONObject reply = new JSONObject();
 	    reply.put("returnVal",0);
 	    msg.respond(reply.toString());
 	} else
