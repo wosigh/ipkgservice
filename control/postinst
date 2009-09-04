@@ -20,8 +20,8 @@ echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/webos-internals.conf
 
 # Install preyourmind feeds
-echo "src preyourmind http://preyourmind.org/services/feed/arch_all" > /var/etc/ipkg/preyourmind.conf
-echo "src preyourmind-`/bin/uname -m` http://preyourmind.org/services/feed/arch_`/bin/uname -m`" >> /var/etc/ipkg/preyourmind.conf
+echo "src/gz preyourmind http://preyourmind.org/services/feed/arch_all" > /var/etc/ipkg/preyourmind.conf
+echo "src/gz preyourmind-`/bin/uname -m` http://preyourmind.org/services/feed/arch_`/bin/uname -m`" >> /var/etc/ipkg/preyourmind.conf
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
 
 # Remove obsolete lists
