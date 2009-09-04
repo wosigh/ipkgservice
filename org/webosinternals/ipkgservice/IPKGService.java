@@ -461,7 +461,21 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doRestartServices(ServiceMessage msg)
+    private JSONObject doRestartLunaSysMgr(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	ReturnResult ret = executeCMD("stop LunaSysMgr ; start LunaSysMgr");
+	reply.put("returnVal",ret.returnValue);
+	reply.put("outputText", ret.stdOut.toString());
+	reply.put("errorText", ret.stdErr.toString());
+	if (ret.returnValue!=0) {
+	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+	    reply.put("errorText", "Failure during 'restartlunasysmgr' operation");
+	}
+	return reply;
+    }
+
+    private JSONObject doRestartJavaServiceBoot(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD("stop java-serviceboot ; start java-serviceboot");
@@ -470,7 +484,7 @@ public class IPKGService extends LunaServiceThread {
 	reply.put("errorText", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'restartservices' operation");
+	    reply.put("errorText", "Failure during 'restartjavaserviceboot' operation");
 	}
 	return reply;
     }
@@ -607,10 +621,20 @@ public class IPKGService extends LunaServiceThread {
     }
 
     @LunaServiceThread.PublicMethod
-	public void restartservices(ServiceMessage msg)
+	public void restartlunasysmgr(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
-	    JSONObject reply = doRestartServices(msg);
+	    JSONObject reply = doRestartLunaSysMgr(msg);
+	    msg.respond(reply.toString());
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void restartjavaserviceboot(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = doRestartJavaServiceBoot(msg);
 	    msg.respond(reply.toString());
 	} else
 	    ipkgDirNotReady(msg);
@@ -872,4 +896,15 @@ public class IPKGService extends LunaServiceThread {
 	}
     }
     
+    @LunaServiceThread.PublicMethod
+	public void status(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply;
+	    reply.put("returnVal",0);
+	    msg.respond(reply.toString());
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
 }
