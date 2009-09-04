@@ -248,6 +248,7 @@ public class IPKGService extends LunaServiceThread {
 	else
 	    status = config.renameTo(new File(configName+".disabled"));
 	result.put("returnVal", status);
+	result.put("returnValue", status);
 	return result;
     }
 
@@ -364,6 +365,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "update");
 	reply.put("returnVal",ret.returnValue);
+	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut);
 	reply.put("stdErr", ret.stdErr);
 	if (ret.returnValue!=0) {
@@ -380,6 +382,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
 	reply.put("returnVal",ret.returnValue);
+	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stage","completed");
 	reply.put("stdOut", ret.stdOut);
 	reply.put("stdErr", ret.stdErr);
@@ -417,6 +420,7 @@ public class IPKGService extends LunaServiceThread {
 	File prerm = new File(prermPath);
 	if (prerm.exists()) {
 	    reply.put("returnVal", 0);
+	    reply.put("returnValue", true);
 	    reply.put("stage","confirm");
 	    reply.put("errorText", "Confirmation requested for 'prerm' script execution");
 	    String script = readFile(prerm, "<br>");
@@ -435,6 +439,7 @@ public class IPKGService extends LunaServiceThread {
 	} else {
 	    ReturnResult ret = executeCMD(ipkgBaseCommand + "remove " + packageName);
 	    reply.put("returnVal",ret.returnValue);
+	    reply.put("returnValue",(ret.returnValue == 0));
 	    reply.put("stage","completed");
 	    reply.put("stdOut", ret.stdOut);
 	    reply.put("stdErr", ret.stdErr);
@@ -452,6 +457,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD("luna-send -n 1 palm://com.palm.applicationManager/rescan {}");
 	reply.put("returnVal",ret.returnValue);
+	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("outputText", ret.stdOut.toString());
 	reply.put("errorText", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
@@ -466,6 +472,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD("stop LunaSysMgr ; start LunaSysMgr");
 	reply.put("returnVal",ret.returnValue);
+	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("outputText", ret.stdOut.toString());
 	reply.put("errorText", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
@@ -480,6 +487,7 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD("stop java-serviceboot ; start java-serviceboot");
 	reply.put("returnVal",ret.returnValue);
+	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("outputText", ret.stdOut.toString());
 	reply.put("errorText", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
@@ -679,6 +687,7 @@ public class IPKGService extends LunaServiceThread {
 		boolean confirmation = msg.getJSONPayload().getBoolean("confirmation");
 		if (origmsg!=null) {
 		    reply.put("returnVal",0);
+		    reply.put("returnValue",true);
 		    msg.respond(reply.toString());
 		    if (confirmation) {
 			if (origmsg.getJSONPayload().has("package")) {
@@ -689,10 +698,12 @@ public class IPKGService extends LunaServiceThread {
 				if (postinst.exists()) {
 				    if (isEmulator == false) {
 					reply.put("returnVal",0);
+					reply.put("returnValue",true);
 					reply.put("stage","unlock");
 					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
@@ -709,6 +720,7 @@ public class IPKGService extends LunaServiceThread {
 				    reply.put("stdOut", ret.stdOut);
 				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
+				    reply.put("returnValue",(ret.returnValue == 0));
 				    if (ret.returnValue!=0) {
 					reply.put("stage","failed");
 					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -718,10 +730,12 @@ public class IPKGService extends LunaServiceThread {
 				    }
 				    if (isEmulator == false) {
 					reply.put("returnVal",0);
+					reply.put("returnValue",true);
 					reply.put("stage","lock");
 					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,ro /");
 					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
@@ -752,6 +766,7 @@ public class IPKGService extends LunaServiceThread {
 			}
 		    } else {
 			reply.put("returnVal",1);
+			reply.put("returnValue",false);
 			reply.put("stage","failed");
 			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 			reply.put("errorText","User cancelled post install script execution");
@@ -786,6 +801,7 @@ public class IPKGService extends LunaServiceThread {
 		boolean confirmation = msg.getJSONPayload().getBoolean("confirmation");
 		if (origmsg!=null) {
 		    reply.put("returnVal",0);
+		    reply.put("returnValue",true);
 		    msg.respond(reply.toString());
 		    if (confirmation) {
 			if (origmsg.getJSONPayload().has("package")) {
@@ -796,10 +812,12 @@ public class IPKGService extends LunaServiceThread {
 				if (prerm.exists()) {
 				    if (isEmulator == false) {
 					reply.put("returnVal",0);
+					reply.put("returnValue",true);
 					reply.put("stage","unlock");
 					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
@@ -816,6 +834,7 @@ public class IPKGService extends LunaServiceThread {
 				    reply.put("stdOut", ret.stdOut);
 				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
+				    reply.put("returnValue",(ret.returnValue == 0));
 				    if (ret.returnValue!=0) {
 					reply.put("stage","failed");
 					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -825,10 +844,12 @@ public class IPKGService extends LunaServiceThread {
 				    }
 				    if (isEmulator == false) {
 					reply.put("returnVal",0);
+					reply.put("returnValue",true);
 					reply.put("stage","lock");
 					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,ro /");
 					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
 					if (ret.returnValue!=0) {
@@ -849,6 +870,7 @@ public class IPKGService extends LunaServiceThread {
 				}
 				ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
 				reply.put("returnVal",ret.returnValue);
+				reply.put("returnValue",(ret.returnValue == 0));
 				reply.put("stdOut", ret.stdOut);
 				reply.put("stdErr", ret.stdErr);
 				if (ret.returnValue!=0) {
@@ -874,6 +896,7 @@ public class IPKGService extends LunaServiceThread {
 			}
 		    } else {
 			reply.put("returnVal",1);
+			reply.put("returnValue",false);
 			reply.put("stage","failed");
 			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 			reply.put("errorText","User cancelled pre remove script execution");
@@ -901,7 +924,8 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	if (ipkgReady) {
 	    JSONObject reply = new JSONObject();
-	    reply.put("returnVal",true);
+	    reply.put("returnVal",0);
+	    reply.put("returnValue",true);
 	    msg.respond(reply.toString());
 	} else
 	    ipkgDirNotReady(msg);

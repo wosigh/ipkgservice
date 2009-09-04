@@ -1,0 +1,36 @@
+description "Package Manager Service"
+
+start on started LunaSysMgr
+
+#console output
+
+script
+   logger "org.webosinternals.ipkgservice upstart: script called"
+
+   sleep 20
+   logger "org.webosinternals.ipkgservice upstart: delay done"
+
+   returnTrue=0
+   tries=0
+   while [ $returnTrue -eq 0 -a $tries -le 20 ]
+   do
+      returnVal=$(luna-send -n 1 luna://org.webosinternals.ipkgservice/status '{}' 2>&1)
+
+      logger "org.webosinternals.ipkgservice upstart: returnVal is $returnVal"
+
+      tries=`expr $tries + 1`
+      if [ "$returnVal" = "** Message: serviceResponse Handling: 2, {\"returnValue\":true}" ]
+      then
+         returnTrue=1
+      else
+         sleep 10
+      fi
+   done
+
+   logger "org.webosinternals.ipkgservice upstart: $returnTrue"
+   logger "org.webosinternals.ipkgservice upstart: $tries"
+
+   logger "org.webosinternals.ipkgservice upstart: done"
+end script
+
+#respawn
