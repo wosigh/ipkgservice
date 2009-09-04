@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Install the java dbus service
+rm -f /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
+ln -s /var/usr/lib/luna/java/org.webosinternals.ipkgservice.jar /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
+rm -f /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
+ln -s /var/usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
+
+# Install the upstart script
+rm -f /etc/event.d/org.webosinternals.ipkgservice
+cp /var/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinternals.ipkgservice
+
+# Set up the architecture configuration file
+rm -f /var/etc/ipkg/arch.conf
+ln -s /etc/ipkg/arch.conf /var/etc/ipkg/arch.conf
+
+# Install webosinternals feeds
+echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" > /var/etc/ipkg/webos-internals.conf
+echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> /var/etc/ipkg/webos-internals.conf
+sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/webos-internals.conf
+
+# Install preyourmind feeds
+echo "src preyourmind http://preyourmind.org/services/feed/arch_all" > /var/etc/ipkg/preyourmind.conf
+echo "src preyourmind-`/bin/uname -m` http://preyourmind.org/services/feed/arch_`/bin/uname -m`" >> /var/etc/ipkg/preyourmind.conf
+sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
+
+# Remove obsolete lists
+rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
+
+# Restart the service
+stop java-serviceboot
+start java-serviceboot
+
+exit 0
