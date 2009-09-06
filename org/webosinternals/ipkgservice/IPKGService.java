@@ -258,7 +258,7 @@ public class IPKGService extends LunaServiceThread {
 	if (ret.returnValue==0) {
 	    JSONObject list = new JSONObject();
 	    for (int i=0; i<ret.stdOut.size()-1;i++) {
-		String[] item = ret.stdOut.get(i).split(" - ", 2);
+		String[] item = ret.stdOut.get(i).split(" - ", 3);
 		JSONObject info = new JSONObject();
 		String name = item[0].trim();
 		String version = item[1].trim();
@@ -470,7 +470,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRestartLunaSysMgr(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("stop LunaSysMgr ; start LunaSysMgr");
+	ReturnResult ret = executeCMD("stop LunaSysMgr && start LunaSysMgr");
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("outputText", ret.stdOut.toString());
@@ -485,7 +485,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRestartJavaServiceBoot(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("stop java-serviceboot ; start java-serviceboot");
+	ReturnResult ret = executeCMD("stop java-serviceboot && start java-serviceboot");
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("outputText", ret.stdOut.toString());
