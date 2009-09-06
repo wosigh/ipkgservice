@@ -48,6 +48,8 @@ public class IPKGService extends LunaServiceThread {
     private static final String ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
     private static final String ipkgConfigDirPath = "/var/etc/ipkg";
     private static final String ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
+    private static final String ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
+    private static final String ipkgStatusPath = "/var/usr/lib/ipkg/status";
 
     private Runtime runtime;
     File ipkgconfdir;
@@ -497,6 +499,30 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
+    private JSONObject getRawList(String feedName, ServiceMessage msg)
+	throws JSONException, LSException {
+	String filename = ipkgListsBasePath + feedName;
+	File listfile = new File(filename);
+	if (listfile.exists()) {
+	    JSONObject reply = new JSONObject();
+	    reply.put("contents",readFile(listfile, "\n"));
+	    return reply;
+	} else
+	    return null;
+    }
+
+    private JSONObject getRawStatus(ServiceMessage msg)
+	throws JSONException, LSException {
+	String filename = ipkgStatusPath;
+	File statusfile = new File(filename);
+	if (statusfile.exists()) {
+	    JSONObject reply = new JSONObject();
+	    reply.put("contents",readFile(statusfile, "\n"));
+	    return reply;
+	} else
+	    return null;
+    }
+
     /* ============================ DBUS Methods =============================*/
 
     @LunaServiceThread.PublicMethod
@@ -930,4 +956,36 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgDirNotReady(msg);
     }
 
+    @LunaServiceThread.PublicMethod
+	public void rawlist(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("feed")) {
+		JSONObject reply = getRawList(msg.getJSONPayload().getString("feed").trim(), msg);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'raw list' operation");
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'feed' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
+    @LunaServiceThread.PublicMethod
+	public void rawstatus(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = getRawStatus(msg);
+	    if (reply!=null)
+		msg.respond(reply.toString());
+	    else
+		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				 "Failure during 'raw status' operation");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
 }
