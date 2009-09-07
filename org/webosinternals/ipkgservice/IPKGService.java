@@ -980,6 +980,15 @@ public class IPKGService extends LunaServiceThread {
     }
 
     @LunaServiceThread.PublicMethod
+	public void version(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	reply.put("returnValue",true);
+	reply.put("apiVersion","2");
+	msg.respond(reply.toString());
+    }
+
+    @LunaServiceThread.PublicMethod
 	public void rawlist(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
