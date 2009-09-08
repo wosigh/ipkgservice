@@ -485,10 +485,9 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret = executeCMD("luna-send -n 1 palm://com.palm.applicationManager/rescan {}");
-	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
-	reply.put("outputText", ret.stdOut.toString());
-	reply.put("errorText", ret.stdErr.toString());
+	reply.put("stdOut", ret.stdOut.toString());
+	reply.put("stdErr", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during 'rescan' operation");
@@ -496,32 +495,30 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doRestartLunaSysMgr(ServiceMessage msg)
+    private JSONObject doRestartLuna(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("stop LunaSysMgr && start LunaSysMgr");
-	reply.put("returnVal",ret.returnValue);
+	ReturnResult ret = executeCMD("killall -HUP LunaSysMgr");
 	reply.put("returnValue",(ret.returnValue == 0));
-	reply.put("outputText", ret.stdOut.toString());
-	reply.put("errorText", ret.stdErr.toString());
+	reply.put("stdOut", ret.stdOut.toString());
+	reply.put("stdErr", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'restartlunasysmgr' operation");
+	    reply.put("errorText", "Failure during 'restartluna' operation");
 	}
 	return reply;
     }
 
-    private JSONObject doRestartJavaServiceBoot(ServiceMessage msg)
+    private JSONObject doRestartJava(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("stop java-serviceboot && start java-serviceboot");
-	reply.put("returnVal",ret.returnValue);
+	ReturnResult ret = executeCMD("killall java");
 	reply.put("returnValue",(ret.returnValue == 0));
-	reply.put("outputText", ret.stdOut.toString());
-	reply.put("errorText", ret.stdErr.toString());
+	reply.put("stdOut", ret.stdOut.toString());
+	reply.put("stdErr", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'restartjavaserviceboot' operation");
+	    reply.put("errorText", "Failure during 'restartjava' operation");
 	}
 	return reply;
     }
@@ -670,31 +667,22 @@ public class IPKGService extends LunaServiceThread {
     @LunaServiceThread.PublicMethod
 	public void rescan(ServiceMessage msg)
 	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = doRescan(msg);
-	    msg.respond(reply.toString());
-	} else
-	    ipkgDirNotReady(msg);
+	JSONObject reply = doRescan(msg);
+	msg.respond(reply.toString());
     }
 
     @LunaServiceThread.PublicMethod
-	public void restartlunasysmgr(ServiceMessage msg)
+	public void restartluna(ServiceMessage msg)
 	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = doRestartLunaSysMgr(msg);
-	    msg.respond(reply.toString());
-	} else
-	    ipkgDirNotReady(msg);
+	JSONObject reply = doRestartLuna(msg);
+	msg.respond(reply.toString());
     }
 
     @LunaServiceThread.PublicMethod
-	public void restartjavaserviceboot(ServiceMessage msg)
+	public void restartjava(ServiceMessage msg)
 	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = doRestartJavaServiceBoot(msg);
-	    msg.respond(reply.toString());
-	} else
-	    ipkgDirNotReady(msg);
+	JSONObject reply = doRestartJava(msg);
+	msg.respond(reply.toString());
     }
 
     @LunaServiceThread.PublicMethod
