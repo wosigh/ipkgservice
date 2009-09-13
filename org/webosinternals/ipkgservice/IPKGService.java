@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 import com.palm.luna.LSException;
 import com.palm.luna.service.LunaServiceThread;
@@ -190,46 +191,50 @@ public class IPKGService extends LunaServiceThread {
 	int ret = 1;
 	ArrayList<String> output = new ArrayList<String>();
 	ArrayList<String> errors = new ArrayList<String>();
-	if (checkArg(command)) {
-	    try {
-		Process p = runtime.exec(command);
-		InputStream stdout = p.getInputStream();
-		BufferedInputStream stdoutbuf = new BufferedInputStream(stdout);
-		InputStreamReader stdoutreader = new InputStreamReader(stdoutbuf);
-		BufferedReader bufferedstdoutreader = new BufferedReader(stdoutreader);
-		InputStream stderr = p.getErrorStream();
-		BufferedInputStream stderrbuf = new BufferedInputStream(stderr);
-		InputStreamReader stderrreader = new InputStreamReader(stderrbuf);
-		BufferedReader bufferedstderrreader = new BufferedReader(stderrreader);
-				
-		String line;
-		while ((line = bufferedstdoutreader.readLine()) != null) {
-		    output.add(line);
-		}
-		while ((line = bufferedstderrreader.readLine()) != null) {
-		    errors.add(line);
-		}
-
-		try {
-		    if (p.waitFor() != 0)
-			System.err.println("exit value = " + p.exitValue());
-		    else
-			ret = 0;
-		} catch (InterruptedException e) {
-		    System.err.println(e);
-		} finally {
-		    bufferedstdoutreader.close();
-		    stdoutreader.close();
-		    stdoutbuf.close();
-		    stdout.close();
-		    bufferedstderrreader.close();
-		    stderrreader.close();
-		    stderrbuf.close();
-		    stderr.close();
-		}
-	    } catch (IOException e) {
-		System.err.println(e.getMessage());
+	try {
+	    ProcessBuilder builder = new ProcessBuilder(command.split(" "));
+	    Map<String,String> env = builder.environment();
+	    env.put("IPKG_OFFLINE_ROOT", "/var");
+	    env.put("PKG_ROOT", "/");
+	    Process p = builder.start();
+	    InputStream stdout = p.getInputStream();
+	    BufferedInputStream stdoutbuf = new BufferedInputStream(stdout);
+	    InputStreamReader stdoutreader = new InputStreamReader(stdoutbuf);
+	    BufferedReader bufferedstdoutreader = new BufferedReader(stdoutreader);
+	    InputStream stderr = p.getErrorStream();
+	    BufferedInputStream stderrbuf = new BufferedInputStream(stderr);
+	    InputStreamReader stderrreader = new InputStreamReader(stderrbuf);
+	    BufferedReader bufferedstderrreader = new BufferedReader(stderrreader);
+	    
+	    String line;
+	    while ((line = bufferedstdoutreader.readLine()) != null) {
+		output.add(line);
 	    }
+	    while ((line = bufferedstderrreader.readLine()) != null) {
+		errors.add(line);
+	    }
+	    
+	    try {
+		if (p.waitFor() != 0) {
+		    System.err.println("exit value = " + p.exitValue());
+		    ret = p.exitValue();
+		}
+		else
+		    ret = 0;
+	    } catch (InterruptedException e) {
+		System.err.println(e);
+	    } finally {
+		bufferedstdoutreader.close();
+		stdoutreader.close();
+		stdoutbuf.close();
+		stdout.close();
+		bufferedstderrreader.close();
+		stderrreader.close();
+		stderrbuf.close();
+		stderr.close();
+	    }
+	} catch (IOException e) {
+	    System.err.println(e.getMessage());
 	}
 	return new ReturnResult(ret, output, errors);
     }
@@ -440,7 +445,6 @@ public class IPKGService extends LunaServiceThread {
 	    reply.put("returnVal", 0);
 	    reply.put("returnValue", true);
 	    reply.put("stage","confirm");
-	    reply.put("errorText", "Confirmation requested for 'prerm' script execution");
 	    String script = readFile(prerm, "<br>");
 	    JSONObject parameters = new JSONObject();
 	    JSONObject params =  new JSONObject();
@@ -961,7 +965,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","2");
+	reply.put("apiVersion","3");
 	msg.respond(reply.toString());
     }
 
