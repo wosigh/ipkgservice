@@ -128,30 +128,19 @@ public class IPKGService extends LunaServiceThread {
 	    return null;
     }
 
-    private JSONObject readList(File file, String delim)
+    private JSONObject readList(File file)
 	throws JSONException {
-	StringBuilder contents = new StringBuilder();
-	int numpackages = 0;
+	int size = 0;
+	char[] contents = new char[(int)file.length()];
 	try { 
-	    BufferedReader input =  new BufferedReader(new FileReader(file));
-	    try {
-		String line = null;
-		while (( line = input.readLine()) != null){
-		    contents.append(line);
-		    contents.append(delim);
-		    if (line.startsWith("Package: "))
-			numpackages++;
-		}
-	    } finally {
-		input.close();
-	    }
+	    FileReader fr = new FileReader(file);
+	    try { size = fr.read(contents, 0, (int)file.length()); }
+	    finally { fr.close(); }
 	} catch (IOException e){
 	    System.err.println(e);
 	}
 	JSONObject reply = new JSONObject();
-	reply.put("size", numpackages);
-	if (numpackages > 0)
-	    reply.put("contents", contents.toString());
+	reply.put("contents", new String(contents, 0, size));
 	return reply;
     }
 
@@ -528,7 +517,7 @@ public class IPKGService extends LunaServiceThread {
 	String filename = ipkgListsBasePath + feedName;
 	File listfile = new File(filename);
 	if (listfile.exists()) {
-	    return readList(listfile, "\n");
+	    return readList(listfile);
 	} else
 	    return null;
     }
@@ -538,7 +527,7 @@ public class IPKGService extends LunaServiceThread {
 	String filename = ipkgStatusPath;
 	File statusfile = new File(filename);
 	if (statusfile.exists()) {
-	    return readList(statusfile, "\n");
+	    return readList(statusfile);
 	} else
 	    return null;
     }
