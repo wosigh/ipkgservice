@@ -124,19 +124,60 @@ public class IPKGService extends LunaServiceThread {
 	    return null;
     }
 
-    private JSONObject readList(File file, ServiceMessage msg)
-	throws JSONException {
+    private JSONObject readList(File file, ServiceMessage msg, Boolean subscribe)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	int filesize = (int)file.length();
+	int datasize = 0;
+	int chunksize = 4096;
 	int size = 0;
-	char[] contents = new char[(int)file.length()];
+	if (!subscribe) {
+	    chunksize = filesize;
+	}
+	char[] contents = new char[chunksize];
+	if (subscribe) {
+	    reply.put("stage", "start");
+	    reply.put("filesize", filesize);
+	    reply.put("chunksize", chunksize);
+	    reply.put("returnValue",true);
+	    msg.respond(reply.toString());
+	    reply.remove("filesize");
+	    reply.remove("chunksize");
+	}
 	try { 
 	    FileReader fr = new FileReader(file);
-	    try { size = fr.read(contents, 0, (int)file.length()); }
-	    finally { fr.close(); }
+	    try {
+		if (subscribe) {
+		    while ((size = fr.read(contents, 0, chunksize)) > 0) {
+			reply.put("stage", "middle");
+			reply.put("returnValue",true);
+			reply.put("contents", new String(contents, 0, size));
+			reply.put("size", size);
+			msg.respond(reply.toString());
+			datasize += size;
+		    }
+		}
+		else {
+		    size = fr.read(contents, 0, chunksize);
+		    reply.put("returnValue",true);
+		    reply.put("contents", new String(contents, 0, size));
+		    reply.put("size", size);
+		    datasize = size;
+		}
+	    }
+	    finally {
+		fr.close();
+	    }
 	} catch (IOException e){
 	    System.err.println(e);
+	    reply.put("returnValue",false);
 	}
-	JSONObject reply = new JSONObject();
-	reply.put("contents", new String(contents, 0, size));
+	if (subscribe) {
+	    reply.put("stage", "end");
+	    reply.put("datasize", datasize);
+	    reply.remove("contents");
+	    reply.remove("size");
+	}
 	return reply;
     }
 
@@ -368,12 +409,12 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject getRawList(String feedName, ServiceMessage msg)
+    private JSONObject getRawList(String feedName, ServiceMessage msg, Boolean subscribe)
 	throws JSONException, LSException {
 	String filename = ipkgListsBasePath + feedName;
 	File listfile = new File(filename);
 	if (listfile.exists()) {
-	    return readList(listfile, msg);
+	    return readList(listfile, msg, subscribe);
 	} else
 	    return null;
     }
@@ -383,7 +424,7 @@ public class IPKGService extends LunaServiceThread {
 	String filename = ipkgStatusPath;
 	File statusfile = new File(filename);
 	if (statusfile.exists()) {
-	    return readList(statusfile, msg);
+	    return readList(statusfile, msg, false);
 	} else
 	    return null;
     }
@@ -751,9 +792,13 @@ public class IPKGService extends LunaServiceThread {
     @LunaServiceThread.PublicMethod
 	public void rawlist(ServiceMessage msg)
 	throws JSONException, LSException {
+	Boolean subscribe = false;
 	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("subscribe") && msg.getJSONPayload().getBoolean("subscribe")) {
+		subscribe = true;
+	    }
 	    if (msg.getJSONPayload().has("feed")) {
-		JSONObject reply = getRawList(msg.getJSONPayload().getString("feed").trim(), msg);
+		JSONObject reply = getRawList(msg.getJSONPayload().getString("feed").trim(), msg, subscribe);
 		if (reply!=null)
 		    msg.respond(reply.toString());
 		else
