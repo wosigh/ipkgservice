@@ -27,8 +27,10 @@ sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
 # Remove obsolete lists
 rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
 
-# Restart the service handler (this also starts org.webosinternals.ipkgservice)
-/sbin/stop java-serviceboot
-/sbin/start java-serviceboot
+# Restart the service handler (this also starts this service)
+if [ -z "$IPKG_OFFLINE_ROOT" ]; then # Defined by recent installers that also support flags.
+    /sbin/stop java-serviceboot
+    /sbin/start java-serviceboot
+fi
 
 exit 0

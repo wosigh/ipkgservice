@@ -11,7 +11,9 @@ rm -f /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
 rm -f /etc/event.d/org.webosinternals.ipkgservice
 
 # Restart the service handler
-/sbin/stop java-serviceboot
-/sbin/start java-serviceboot
+if [ -z "$IPKG_OFFLINE_ROOT" ]; then # Defined by recent installers that also support flags.
+    /sbin/stop java-serviceboot
+    /sbin/start java-serviceboot
+fi
 
 exit 0
