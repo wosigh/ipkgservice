@@ -30,8 +30,6 @@ import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 import com.palm.luna.LSException;
@@ -52,7 +50,6 @@ public class IPKGService extends LunaServiceThread {
     private static final String ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
     private static final String ipkgStatusPath = "/var/usr/lib/ipkg/status";
 
-    private Runtime runtime;
     File ipkgconfdir;
     boolean ipkgReady = false;
     boolean isEmulator = false;
@@ -85,8 +82,6 @@ public class IPKGService extends LunaServiceThread {
 		ipkgReady = true;
 	} else
 	    ipkgReady = ipkgconfdir.mkdirs();
-	if (ipkgReady)
-	    runtime = Runtime.getRuntime();
     }
 
     private final void ipkgDirNotReady(ServiceMessage msg) throws LSException {
@@ -129,7 +124,7 @@ public class IPKGService extends LunaServiceThread {
 	    return null;
     }
 
-    private JSONObject readList(File file)
+    private JSONObject readList(File file, ServiceMessage msg)
 	throws JSONException {
 	int size = 0;
 	char[] contents = new char[(int)file.length()];
@@ -143,41 +138,6 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	reply.put("contents", new String(contents, 0, size));
 	return reply;
-    }
-
-    /**
-     * Compare version strings
-     * 
-     * @param version1
-     * @param version2
-     * @return 1 is version1 is larger, -1 if version1 is smaller, 0 if equal
-     */
-    private int compareVersions(String[] version1, String[] version2) {
-	int ret = 0;
-	int val1 = Integer.valueOf(version1[0]);
-	int val2 = Integer.valueOf(version2[0]);
-	if ( val1 > val2 ) {
-	    ret = 1;
-	} else if ( val1 < val2 ) {		
-	    ret = -1;
-	} else if ( val1 == val2 ) {
-	    val1 = Integer.valueOf(version1[1]);
-	    val2 = Integer.valueOf(version2[1]);
-	    if ( val1 > val2 ) {
-		ret = 1;
-	    } else if ( val1 < val2 ) {
-		ret = -1;
-	    } else if ( val1 == val2 ) {
-		val1 = Integer.valueOf(version1[2]);
-		val2 = Integer.valueOf(version2[2]);
-		if ( val1 > val2 ) {
-		    ret = 1;
-		} else if ( val1 < val2 ) {
-		    ret = -1;
-		}
-	    }
-	}
-	return ret;
     }
 
     /**
@@ -273,114 +233,6 @@ public class IPKGService extends LunaServiceThread {
 	result.put("returnVal", status);
 	result.put("returnValue", status);
 	return result;
-    }
-
-    private JSONObject getList(String listType, ServiceMessage msg)
-	throws JSONException, LSException {
-	ReturnResult ret = executeCMD(ipkgBaseCommand + listType);
-	if (ret.returnValue==0) {
-	    JSONObject list = new JSONObject();
-	    for (int i=0; i<ret.stdOut.size()-1;i++) {
-		String[] item = ret.stdOut.get(i).split(" - ", 3);
-		JSONObject info = new JSONObject();
-		String name = item[0].trim();
-		String version = item[1].trim();
-		String description = null;
-		if (item.length==3)
-		    description = item[2].trim();
-		info.put("version", version);
-		info.put("description", description);
-		if (!list.has(name))
-		    list.put(name, info);
-		else {
-		    JSONObject dupeInfo = list.getJSONObject(name);
-		    int comparison = compareVersions(version.split("\\."), dupeInfo.get("version").toString().split("\\."));
-		    if (comparison==1)
-			list.put(name, info);
-		}
-	    }
-	    return list;
-	}
-	return null;
-    }
-
-    private JSONObject getInfo(String packageName, ServiceMessage msg)
-	throws JSONException, LSException {
-	ReturnResult ret;
-	if (packageName==null)
-	    ret = executeCMD(ipkgBaseCommand + "info");
-	else
-	    ret = executeCMD(ipkgBaseCommand + "info " + packageName);
-	if (ret.returnValue==0) {
-	    JSONArray infoList = new JSONArray();
-	    JSONObject info = new JSONObject();
-	    for (String line : ret.stdOut) {
-		if (line.trim().compareTo("Successfully terminated.")!=0) {
-		    if (line.trim().length()==0) {
-			infoList.put(info);
-			info = new JSONObject();
-		    } else {
-			String[] item = line.split(": ", 2);
-			String key = item[0].trim();
-			String value = item[1].trim();
-			info.put(key,value);
-		    }
-		}
-	    }
-	    JSONObject reply = new JSONObject();
-	    reply.put("info", infoList);
-	    return reply;
-	}
-	return null;
-    }
-
-    private JSONObject getCategories(ServiceMessage msg)
-	throws JSONException, LSException {
-	LinkedHashSet<String> categories = new LinkedHashSet<String>();
-	JSONObject list = getInfo(null, msg);
-	if (list==null)
-	    return null;
-	JSONArray infos = list.getJSONArray("info");
-	if (infos!=null && infos.length()>0) {
-	    for (int i=0; i<infos.length(); i++) {
-		String category = infos.getJSONObject(i).get("Section").toString().trim();
-		if (category.length()>0) {
-		    categories.add(category);
-		}
-	    }
-	}
-	if (!categories.isEmpty()) {
-	    JSONArray catlist = new JSONArray();
-	    for (String cat : categories)
-		catlist.put(cat);
-	    JSONObject reply = new JSONObject();
-	    reply.put("categories", catlist);
-	    return reply;
-	} else
-	    return null;
-    }
-
-    @SuppressWarnings("unchecked")
-	private JSONObject getUpgrades(ServiceMessage msg)
-	throws JSONException, LSException {
-	JSONObject upgrades = new JSONObject();
-	JSONObject allList = getList("list", msg);
-	JSONObject installedList = getList("list_installed", msg);
-	Iterator<String> installedListIter = installedList.keys();
-	while (installedListIter.hasNext()) {
-	    String packageKey = installedListIter.next();
-	    JSONObject item = installedList.getJSONObject(packageKey);
-	    JSONObject potentialUpgrade = allList.getJSONObject(packageKey);
-	    String[] installedVersionString = item.get("version").toString().split("\\.");
-	    String[] potentialUpgradeVersionString = potentialUpgrade.get("version").toString().split("\\.");
-	    int comparison = compareVersions(installedVersionString, potentialUpgradeVersionString);
-	    if (comparison==-1)
-		upgrades.put(packageKey,potentialUpgrade.get("version").toString());
-	}
-	if (upgrades.length()>0)
-	    return upgrades;
-	else
-	    return null;
     }
 
     private JSONObject doUpdate(ServiceMessage msg)
@@ -521,7 +373,7 @@ public class IPKGService extends LunaServiceThread {
 	String filename = ipkgListsBasePath + feedName;
 	File listfile = new File(filename);
 	if (listfile.exists()) {
-	    return readList(listfile);
+	    return readList(listfile, msg);
 	} else
 	    return null;
     }
@@ -531,71 +383,12 @@ public class IPKGService extends LunaServiceThread {
 	String filename = ipkgStatusPath;
 	File statusfile = new File(filename);
 	if (statusfile.exists()) {
-	    return readList(statusfile);
+	    return readList(statusfile, msg);
 	} else
 	    return null;
     }
 
     /* ============================ DBUS Methods =============================*/
-
-    @LunaServiceThread.PublicMethod
-	public void list(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = getList("list", msg);
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'list' operation");
-	} else
-	    ipkgDirNotReady(msg);
-    }
-
-    @LunaServiceThread.PublicMethod
-	public void list_installed(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = getList("list_installed", msg);
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'installed list' operation");
-	} else
-	    ipkgDirNotReady(msg);
-    }
-
-    @LunaServiceThread.PublicMethod
-	public void list_upgrades(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = getUpgrades(msg);
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'upgrade list' operation");
-	} else
-	    ipkgDirNotReady(msg);
-    }
-
-    @LunaServiceThread.PublicMethod
-	public void info(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    String pkg = null;
-	    if (msg.getJSONPayload().has("package"))
-		pkg = msg.getJSONPayload().getString("package").trim();
-	    JSONObject reply = getInfo(pkg, msg);
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'info' operation");
-	} else
-	    ipkgDirNotReady(msg);
-    }
 
     @LunaServiceThread.PublicMethod
 	public void install(ServiceMessage msg)
@@ -639,20 +432,6 @@ public class IPKGService extends LunaServiceThread {
 	if (ipkgReady) {
 	    JSONObject reply = doUpdate(msg);
 	    msg.respond(reply.toString());
-	} else
-	    ipkgDirNotReady(msg);
-    }
-
-    @LunaServiceThread.PublicMethod
-	public void list_categories(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = getCategories(msg);
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'list categories' operation");
 	} else
 	    ipkgDirNotReady(msg);
     }
