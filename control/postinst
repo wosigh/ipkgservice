@@ -19,6 +19,11 @@ echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" >
 echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> /var/etc/ipkg/webos-internals.conf
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/webos-internals.conf
 
+# Install optware feeds
+echo "src/gz optware http://ipkg.preware.org/feeds/optware/all" > /var/etc/ipkg/optware.conf
+echo "src/gz optware-`/bin/uname -m` http://ipkg.preware.org/feeds/optware/`/bin/uname -m`" >> /var/etc/ipkg/optware.conf
+sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/optware.conf
+
 # Install preyourmind feeds
 echo "src/gz preyourmind http://preyourmind.org/services/feed/arch_all" > /var/etc/ipkg/preyourmind.conf
 echo "src/gz preyourmind-`/bin/uname -m` http://preyourmind.org/services/feed/arch_`/bin/uname -m`" >> /var/etc/ipkg/preyourmind.conf
