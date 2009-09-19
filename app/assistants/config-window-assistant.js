@@ -1,4 +1,4 @@
-function ScriptViewAssistant(params)
+function ConfigWindowAssistant(params)
 {
 	// we will need these later
 	this.params = params;
@@ -7,39 +7,40 @@ function ScriptViewAssistant(params)
 	this.sentCommand = false;
 }
 
-ScriptViewAssistant.prototype.setup = function()
+ConfigWindowAssistant.prototype.setup = function()
 {
-	// dark theme
-	this.controller.document.body.className = 'palm-dark';
+	// fill in wordage for type of confirmation
+	if (this.params.type === "install") this.controller.get('type').innerHTML = 'add';
+	else if (this.params.type === "remove") this.controller.get('type').innerHTML = 'delete';
 	
-	// fill in description
-	if (!this.params.title) this.params.title = 'Unnamed';
-	this.controller.get('description').innerHTML = this.params.title;
+	// fill in name
+	if (!this.params.config) this.params.title = 'Unnamed';
+	this.controller.get('name').innerHTML = this.params.config;
 	
-	// fill in script
-	this.controller.get('script').innerHTML = this.params.script;
-	
-	// setup scroller
-	this.controller.setupWidget('scriptScroller', {mode: 'dominant'});
+	// fill in url
+	if (!this.params.url) this.params.url = 'Unknown';
+	this.controller.get('url').innerHTML = this.params.url.replace(/http:\/\//, '');
 	
 	// setup buttons
-	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
-	Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
-	this.controller.setupWidget('cancel-button', {}, {buttonLabel: 'Cancel', buttonClass: 'negative'});
-	Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
+	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Yes', buttonClass: 'affirmative'});
+    Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
+	this.controller.setupWidget('cancel-button', {}, {buttonLabel: 'No', buttonClass: 'negative'});
+    Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
 }
 
-ScriptViewAssistant.prototype.okButton = function()
+ConfigWindowAssistant.prototype.okButton = function()
 {
 	// send ok command here
-	//console.log('Script View [Ok Button]');
-
+	//console.log('Popup [Ok Button]');
+	
+	/*
 	if (this.params.type === "install") {
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
 	if (this.params.type === "remove") {
 	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
+	*/
 	
 	// if the ok is successful
 	this.sentCommand = true;
@@ -48,17 +49,19 @@ ScriptViewAssistant.prototype.okButton = function()
 	this.controller.window.close();
 }
 
-ScriptViewAssistant.prototype.cancelButton = function()
+ConfigWindowAssistant.prototype.cancelButton = function()
 {
 	// send cancel command here
-	//console.log('Script View [Cancel Button]');
-
+	//console.log('Popup [Cancel Button]');
+	
+	/*
 	if (this.params.type === "install") {
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
 	if (this.params.type === "remove") {
 	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
+	*/
 	
 	// if the cancel is successful
 	this.sentCommand = true;
@@ -67,33 +70,35 @@ ScriptViewAssistant.prototype.cancelButton = function()
 	this.controller.window.close();
 }
 
-ScriptViewAssistant.prototype.confirmCallback = function(payload)
+ConfigWindowAssistant.prototype.confirmCallback = function(payload)
 {
 	// for lack of anything better to do with the results right now
 	//console.log(payload);
 }
 
-ScriptViewAssistant.prototype.activate = function(event) {}
+ConfigWindowAssistant.prototype.activate = function(event) {}
 
-ScriptViewAssistant.prototype.deactivate = function(event)
+ConfigWindowAssistant.prototype.deactivate = function(event)
 {
 	// if we haven't sent a command, we should send a cancel.
-	// this would happen if they hit the switched to card view and dismissed it.
+	// this would happen if they hit the home button or used the back gesture.
 	if (!this.sentCommand)
 	{
 		// send cancel command here
-		//console.log('Script View [Card Discard]');
-
+		//console.log('Popup [Cancel Gesture]');
+		
+		/*
 		if (this.params.type === "install") {
 		    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 		}
 		if (this.params.type === "remove") {
 		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 		}
+		*/
 	}
 }
 
-ScriptViewAssistant.prototype.cleanup = function(event)
+ConfigWindowAssistant.prototype.cleanup = function(event)
 {
 	// cleanup our event listeners
     Mojo.Event.stopListening(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));

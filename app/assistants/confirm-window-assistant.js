@@ -29,7 +29,7 @@ ConfirmWindowAssistant.prototype.setup = function()
 ConfirmWindowAssistant.prototype.okButton = function()
 {
 	// send ok command here
-	console.log('Popup [Ok Button]');
+	//console.log('Popup [Ok Button]');
 
 	if (this.params.type === "install") {
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
@@ -68,7 +68,7 @@ ConfirmWindowAssistant.prototype.pushView = function(stageController)
 ConfirmWindowAssistant.prototype.cancelButton = function()
 {
 	// send cancel command here
-	console.log('Popup [Cancel Button]');
+	//console.log('Popup [Cancel Button]');
 
 	if (this.params.type === "install") {
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
@@ -87,7 +87,7 @@ ConfirmWindowAssistant.prototype.cancelButton = function()
 ConfirmWindowAssistant.prototype.confirmCallback = function(payload)
 {
 	// for lack of anything better to do with the results right now
-	console.log(payload);
+	//console.log(payload);
 }
 
 ConfirmWindowAssistant.prototype.activate = function(event) {}
@@ -99,7 +99,7 @@ ConfirmWindowAssistant.prototype.deactivate = function(event)
 	if (!this.sentCommand)
 	{
 		// send cancel command here
-		console.log('Popup [Cancel Gesture]');
+		//console.log('Popup [Cancel Gesture]');
 
 		if (this.params.type === "install") {
 		    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);

@@ -10,6 +10,10 @@
         "scenes": "script-view"
     },
     {
+        "source": "app\/assistants\/config-window-assistant.js",
+        "scenes": "config-window"
+    },
+    {
         "source": "app\/assistants\/manual-open-assistant.js",
         "scenes": "manual-open"
     }

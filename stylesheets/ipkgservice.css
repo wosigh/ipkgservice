@@ -1,5 +1,5 @@
 /*
- * Confirmation Window Styles
+ * Confirmation and Config Window Styles
  */
 
 .confirmWindow
@@ -8,7 +8,6 @@
 	padding-right: 5px;
 	padding-top: 8px;
 }
-
 .confirmWindow .message
 {
 	padding-left: 10px;
@@ -59,11 +58,94 @@
 	margin-left: 5px;
 }
 
+.configWindow .message .top
+{
+	padding-top: 5px;
+}
+.configWindow .row
+{
+	min-height: 30px;
+	width: auto;
+	clear: both;
+}
+.configWindow .row.first
+{
+	border-bottom: 1px solid #666;
+}
+.configWindow .row .left
+{
+	color: #ccc;
+	font-weight: bold;
+	margin-top: 4px;
+	margin-left: 10px;
+	margin-right: 15px;
+	float: left;
+	font-size: 14px;
+	text-transform: uppercase;
+}
+.configWindow .row .right
+{
+	color: #e5e5e5;
+	margin-top: 6px;
+	margin-right: 10px;
+	font-size: 18px;
+	text-align: right;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.configWindow .buttons #ok-button
+{
+	float: left;
+	width: 49%;
+	margin-left: 1px;
+}
+.configWindow .buttons #cancel-button
+{
+	float: left;
+	width: 49%;
+	margin-left: 6px;
+}
+
 
 
 /*
  * Scripe View Styles
  */
+
+body.palm-dark
+{
+	background: #000;
+}
+
+.scriptView .palm-button
+{
+  clear: both;
+  margin: 5px 0 5px 0;
+  height: 52px;
+  padding: 0;
+  font-size: 20px;
+  text-align: center;
+  text-transform: capitalize;
+  color: #fff;
+  line-height: 52px;
+  background: none;
+  border-width: 0 22px;
+  -webkit-box-sizing: border-box;
+  -webkit-border-image: url(../images/palm-notification-button.png) 0 22 104 22 repeat repeat;
+}
+
+.scriptView .palm-button.affirmative
+{
+  color: #fff;
+  -webkit-border-image: url(../images/palm-notification-button-affirmative.png) 0 22 104 22 repeat repeat;
+}
+
+.scriptView .palm-button.negative
+{
+  color: #fff;
+  -webkit-border-image: url(../images/palm-notification-button-negative.png) 0 22 104 22 repeat repeat;
+}
 
 .scriptView #scriptScroller
 {
@@ -76,11 +158,14 @@
 .scriptView #scriptScroller #script
 {
 	padding: 10px;
-	font-size: 17px;
+	font-size: 18px;
 	overflow: visible;
 	white-space: nowrap;
 	height: 100%;
 	width: 100%;
+	color: #fff;
+	font-family: monospace;
+	font-weight: bold;
 }
 .scriptView #scriptScroller .fade-top
 {
@@ -133,10 +218,12 @@
 .scriptView .buttons #ok-button
 {
 	float: left;
-	width: 50%;
+	width: 49%;
+	margin-left: 1px;
 }
 .scriptView .buttons #cancel-button
 {
 	float: left;
-	width: 50%;
+	width: 49%;
+	margin-left: 6px;
 }
