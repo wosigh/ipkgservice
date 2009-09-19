@@ -22,3 +22,23 @@ IPKGService.confirmRemove = function(callback, hash, confirmation) {
 	return request;
 }
 
+IPKGService.confirmAdd = function(callback, hash, confirmation) {
+	var request = new Mojo.Service.Request(IPKGService.identifier, {
+		method: 'confirmAdd',
+		parameters: {"hash":hash,"confirmation":confirmation},
+		onSuccess: callback,
+		onFailure: callback
+	});
+	return request;
+}
+
+IPKGService.confirmDelete = function(callback, hash, confirmation) {
+	var request = new Mojo.Service.Request(IPKGService.identifier, {
+		method: 'confirmDelete',
+		parameters: {"hash":hash,"confirmation":confirmation},
+		onSuccess: callback,
+		onFailure: callback
+	});
+	return request;
+}
+

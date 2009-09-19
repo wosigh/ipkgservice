@@ -240,7 +240,7 @@ public class IPKGService extends LunaServiceThread {
 	return new ReturnResult(ret, output, errors);
     }
 
-    private JSONObject getConfigs()
+    private JSONObject doGetConfigs()
 	throws JSONException {
 	JSONArray cfgs = new JSONArray();
 	File[] configs = ipkgconfdir.listFiles();
@@ -249,6 +249,10 @@ public class IPKGService extends LunaServiceThread {
 		String filename = file.getName();
 		if (!filename.equals("arch.conf")) {
 		    JSONObject entry = new JSONObject();
+		    if (filename.endsWith(".disabled")) {
+			filename.replace(".disabled", "");
+			entry.put("disabled", true);
+		    }
 		    entry.put(filename, readFile(file, "<br>"));
 		    cfgs.put(entry);
 		}
@@ -262,18 +266,62 @@ public class IPKGService extends LunaServiceThread {
 	    return null;
     }
 
-    private JSONObject toggleConfigState(String configName)
+    private JSONObject doAddConfig(String config, String name, String url, Boolean gzip, ServiceMessage msg)
+	throws JSONException, NoSuchAlgorithmException {
+	JSONObject reply = new JSONObject();
+	File configfile = new File(ipkgConfigDirPath+"/"+config);
+	reply.put("returnValue", true);
+	if (!configfile.exists()) {
+	    JSONObject parameters = new JSONObject();
+	    JSONObject params =  new JSONObject();
+	    String hash = idgen.nextSessionId();
+	    params.put("config", config);
+	    params.put("name", name);
+	    params.put("url", url);
+	    params.put("type", "add");
+	    params.put("hash", hash);
+	    parameters.put("id","org.webosinternals.ipkgservice");
+	    parameters.put("params", params);
+	    confirmations.put(hash, msg);
+	    sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+	}
+	return reply;
+    }
+
+    private JSONObject doDeleteConfig(String config, String name, String url, ServiceMessage msg)
+	throws JSONException, NoSuchAlgorithmException {
+	JSONObject reply = new JSONObject();
+	File configfile = new File(ipkgConfigDirPath+"/"+config);
+	reply.put("returnValue", true);
+	if (configfile.exists()) {
+	    JSONObject parameters = new JSONObject();
+	    JSONObject params =  new JSONObject();
+	    String hash = idgen.nextSessionId();
+	    params.put("config", config);
+	    params.put("name", name);
+	    params.put("url", url);
+	    params.put("type", "delete");
+	    params.put("hash", hash);
+	    parameters.put("id","org.webosinternals.ipkgservice");
+	    parameters.put("params", params);
+	    confirmations.put(hash, msg);
+	    sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+	}
+	return reply;
+    }
+
+    private JSONObject doToggleConfigState(String configName)
 	throws JSONException {
-	JSONObject result = new JSONObject();
+	JSONObject reply = new JSONObject();
 	File config = new File(ipkgConfigDirPath+"/"+configName);
 	Boolean status;
 	if (configName.endsWith(".disabled"))
 	    status = config.renameTo(new File(configName.replace(".disabled", "")));
 	else
 	    status = config.renameTo(new File(configName+".disabled"));
-	result.put("returnVal", status);
-	result.put("returnValue", status);
-	return result;
+	reply.put("returnVal", status);
+	reply.put("returnValue", status);
+	return reply;
     }
 
     private JSONObject doUpdate(ServiceMessage msg)
@@ -485,39 +533,91 @@ public class IPKGService extends LunaServiceThread {
     }
 
     @LunaServiceThread.PublicMethod
-	public void restartluna(ServiceMessage msg)
+	public void restartLuna(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = doRestartLuna(msg);
 	msg.respond(reply.toString());
     }
 
     @LunaServiceThread.PublicMethod
-	public void restartjava(ServiceMessage msg)
+	public void restartJava(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = doRestartJava(msg);
 	msg.respond(reply.toString());
     }
 
     @LunaServiceThread.PublicMethod
-	public void list_configs(ServiceMessage msg)
+	public void getConfigs(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
-	    JSONObject reply = getConfigs();
+	    JSONObject reply = doGetConfigs();
 	    if (reply!=null)
 		msg.respond(reply.toString());
 	    else
 		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'get configs' operation");
+				 "Failure during 'getConfigs' operation");
 	} else
 	    ipkgDirNotReady(msg);
     }
 
     @LunaServiceThread.PublicMethod
-	public void toggle_config(ServiceMessage msg)
+	public void addConfig(ServiceMessage msg)
+	throws JSONException, LSException, NoSuchAlgorithmException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("config") &&
+		msg.getJSONPayload().has("name") &&
+		msg.getJSONPayload().has("url") &&
+		msg.getJSONPayload().has("gzip")) {
+		JSONObject reply = doAddConfig(msg.getJSONPayload().getString("config").trim(),
+					       msg.getJSONPayload().getString("name").trim(),
+					       msg.getJSONPayload().getString("url").trim(),
+					       msg.getJSONPayload().getBoolean("gzip"),
+					       msg);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'addConfig' operation");
+	    }
+	    else {
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'config', 'name', 'url' or 'gzip' parameter");
+	    }
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void deleteConfig(ServiceMessage msg)
+	throws JSONException, LSException, NoSuchAlgorithmException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("config") &&
+		msg.getJSONPayload().has("name") &&
+		msg.getJSONPayload().has("url")) {
+		JSONObject reply = doDeleteConfig(msg.getJSONPayload().getString("config").trim(),
+						  msg.getJSONPayload().getString("name").trim(),
+						  msg.getJSONPayload().getString("url").trim(),
+						  msg);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'deleteConfig' operation");
+	    }
+	    else {
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'config', 'name' or 'url' parameter");
+	    }
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void toggleConfigState(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("config")) {
-		msg.respond(toggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
+		msg.respond(doToggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
 	    } else
 		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
 				 "Missing 'config' parameter");
@@ -770,6 +870,153 @@ public class IPKGService extends LunaServiceThread {
     }
     
     @LunaServiceThread.PublicMethod
+	public void confirmAdd(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	ReturnResult ret;
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
+		String hash = msg.getJSONPayload().getString("hash");
+		ServiceMessage origmsg = confirmations.get(hash);
+		boolean confirmation = msg.getJSONPayload().getBoolean("confirmation");
+		if (origmsg!=null) {
+		    reply.put("returnVal",0);
+		    reply.put("returnValue",true);
+		    msg.respond(reply.toString());
+		    if (confirmation) {
+			if (origmsg.getJSONPayload().has("config")) {
+			    String config = origmsg.getJSONPayload().getString("config").trim();
+			    if (checkArg(config)) {
+				reply.put("stage","completed");
+				origmsg.respond(reply.toString());
+			    } else {
+				origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						     "Invalid 'config' parameter");
+				return;
+			    }
+			} else {
+			    origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						 "Missing 'config' parameter");
+			    return;
+			}
+		    } else {
+			reply.put("returnVal",1);
+			reply.put("returnValue",false);
+			reply.put("stage","failed");
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+			reply.put("errorText","User cancelled feed config addition");
+			origmsg.respond(reply.toString());
+			return;
+		    }
+		} else {
+		    msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				     "Invalid 'hash' parameter");
+		    return;
+		}
+	    } else {
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'hash' or 'confirmation' parameter");
+		return;
+	    }
+	} else {
+	    ipkgDirNotReady(msg);
+	    return;
+	}
+    }
+    
+    @LunaServiceThread.PublicMethod
+	public void confirmDelete(ServiceMessage msg)
+	throws JSONException, LSException {
+	ReturnResult ret;
+	JSONObject reply = new JSONObject();
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
+		String hash = msg.getJSONPayload().getString("hash");
+		ServiceMessage origmsg = confirmations.get(hash);
+		boolean confirmation = msg.getJSONPayload().getBoolean("confirmation");
+		if (origmsg!=null) {
+		    reply.put("returnVal",0);
+		    reply.put("returnValue",true);
+		    msg.respond(reply.toString());
+		    if (confirmation) {
+			if (origmsg.getJSONPayload().has("config")) {
+			    String config = origmsg.getJSONPayload().getString("config").trim();
+			    if (checkArg(config)) {
+				reply.put("stage","completed");
+				origmsg.respond(reply.toString());
+				return;
+			    } else {
+				origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						     "Invalid 'config' parameter");
+				return;
+			    }
+			} else {
+			    origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						 "Missing 'config' parameter");
+			    return;
+			}
+		    } else {
+			reply.put("returnVal",1);
+			reply.put("returnValue",false);
+			reply.put("stage","failed");
+			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+			reply.put("errorText","User cancelled feed config deletion");
+			origmsg.respond(reply.toString());
+			return;
+		    }
+		} else {
+		    msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				     "Invalid 'hash' parameter");
+		    return;
+		}
+	    } else {
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'hash' or 'confirmation' parameter");
+		return;
+	    }
+	} else {
+	    ipkgDirNotReady(msg);
+	    return;
+	}
+    }
+    
+    @LunaServiceThread.PublicMethod
+	public void getListFile(ServiceMessage msg)
+	throws JSONException, LSException {
+	Boolean subscribe = false;
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("subscribe") && msg.getJSONPayload().getBoolean("subscribe")) {
+		subscribe = true;
+	    }
+	    if (msg.getJSONPayload().has("feed")) {
+		JSONObject reply = getRawList(msg.getJSONPayload().getString("feed").trim(), msg, subscribe);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'getListFile' operation");
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'feed' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
+    @LunaServiceThread.PublicMethod
+	public void getStatusFile(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = getRawStatus(msg);
+	    if (reply!=null)
+		msg.respond(reply.toString());
+	    else
+		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				 "Failure during 'getStatusFile' operation");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
+    @LunaServiceThread.PublicMethod
 	public void status(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
@@ -785,9 +1032,12 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","4");
+	reply.put("apiVersion","5");
 	msg.respond(reply.toString());
     }
+
+
+    /* ============================ Deprecated Method Names =============================*/
 
     @LunaServiceThread.PublicMethod
 	public void rawlist(ServiceMessage msg)
@@ -825,4 +1075,46 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgDirNotReady(msg);
     }
 	
+    @LunaServiceThread.PublicMethod
+	public void restartluna(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = doRestartLuna(msg);
+	msg.respond(reply.toString());
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void restartjava(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = doRestartJava(msg);
+	msg.respond(reply.toString());
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void list_configs(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = doGetConfigs();
+	    if (reply!=null)
+		msg.respond(reply.toString());
+	    else
+		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				 "Failure during 'list configs' operation");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void toggle_config(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("config")) {
+		msg.respond(doToggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'config' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
 }
+

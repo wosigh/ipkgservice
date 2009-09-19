@@ -10,11 +10,11 @@ function ConfigWindowAssistant(params)
 ConfigWindowAssistant.prototype.setup = function()
 {
 	// fill in wordage for type of confirmation
-	if (this.params.type === "install") this.controller.get('type').innerHTML = 'add';
-	else if (this.params.type === "remove") this.controller.get('type').innerHTML = 'delete';
+	if (this.params.type === "add") this.controller.get('type').innerHTML = 'add';
+	else if (this.params.type === "delete") this.controller.get('type').innerHTML = 'delete';
 	
 	// fill in name
-	if (!this.params.config) this.params.title = 'Unnamed';
+	if (!this.params.config) this.params.config = 'Unnamed';
 	this.controller.get('name').innerHTML = this.params.config;
 	
 	// fill in url
@@ -33,12 +33,11 @@ ConfigWindowAssistant.prototype.okButton = function()
 	// send ok command here
 	//console.log('Popup [Ok Button]');
 	
-	/*
-	if (this.params.type === "install") {
-	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	if (this.params.type === "add") {
+	    IPKGService.confirmAdd(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
-	if (this.params.type === "remove") {
-	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	if (this.params.type === "delete") {
+	    IPKGService.confirmDelete(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
 	*/
 	
@@ -54,14 +53,12 @@ ConfigWindowAssistant.prototype.cancelButton = function()
 	// send cancel command here
 	//console.log('Popup [Cancel Button]');
 	
-	/*
-	if (this.params.type === "install") {
-	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	if (this.params.type === "add") {
+	    IPKGService.confirmAdd(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
-	if (this.params.type === "remove") {
-	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	if (this.params.type === "delete") {
+	    IPKGService.confirmDelete(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
-	*/
 	
 	// if the cancel is successful
 	this.sentCommand = true;
@@ -87,14 +84,12 @@ ConfigWindowAssistant.prototype.deactivate = function(event)
 		// send cancel command here
 		//console.log('Popup [Cancel Gesture]');
 		
-		/*
-		if (this.params.type === "install") {
-		    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+		if (this.params.type === "add") {
+		    IPKGService.confirmAdd(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 		}
-		if (this.params.type === "remove") {
-		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+		if (this.params.type === "delete") {
+		    IPKGService.confirmDelete(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 		}
-		*/
 	}
 }
 

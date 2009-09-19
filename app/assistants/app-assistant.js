@@ -15,9 +15,9 @@ AppAssistant.prototype.handleLaunch = function(params) {
 		};*/
 		/*// for testing config confirmation
         var params = {
-	        config: 'Example Feed',
+	        config: 'test',
 	        url: 'http://example.com/feed/all',
-	        type: 'install',
+	        type: 'add',
 			hash: '5aa072ab2370003ae18f8637bad10589'
 		};*/
 	    
