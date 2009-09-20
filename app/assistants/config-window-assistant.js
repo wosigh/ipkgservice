@@ -39,7 +39,6 @@ ConfigWindowAssistant.prototype.okButton = function()
 	if (this.params.type === "delete") {
 	    IPKGService.confirmDelete(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
-	*/
 	
 	// if the ok is successful
 	this.sentCommand = true;
