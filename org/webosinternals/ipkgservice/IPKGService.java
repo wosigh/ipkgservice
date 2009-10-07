@@ -1094,32 +1094,5 @@ public class IPKGService extends LunaServiceThread {
 	msg.respond(reply.toString());
     }
 
-    @LunaServiceThread.PublicMethod
-	public void list_configs(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    JSONObject reply = doGetConfigs();
-	    if (reply!=null)
-		msg.respond(reply.toString());
-	    else
-		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
-				 "Failure during 'list configs' operation");
-	} else
-	    ipkgDirNotReady(msg);
-    }
-
-    @LunaServiceThread.PublicMethod
-	public void toggle_config(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (ipkgReady) {
-	    if (msg.getJSONPayload().has("config")) {
-		msg.respond(doToggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
-	    } else
-		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
-				 "Missing 'config' parameter");
-	} else
-	    ipkgDirNotReady(msg);
-    }
-	
 }
 
