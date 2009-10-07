@@ -313,16 +313,18 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doToggleConfigState(String configName)
+    private JSONObject doSetConfigState(String configName, Boolean enabled)
 	throws JSONException {
 	JSONObject reply = new JSONObject();
-	File config = new File(ipkgConfigDirPath+"/"+configName);
 	Boolean status;
-	if (configName.endsWith(".disabled"))
-	    status = config.renameTo(new File(configName.replace(".disabled", "")));
-	else
-	    status = config.renameTo(new File(configName+".disabled"));
-	reply.put("returnVal", status);
+	if (enabled) {
+	    File config = new File(ipkgConfigDirPath+"/"+configName+".disabled");
+	    status = config.renameTo(new File(ipkgConfigDirPath+"/"+configName));
+	}
+	else {
+	    File config = new File(ipkgConfigDirPath+"/"+configName);
+	    status = config.renameTo(new File(ipkgConfigDirPath+"/"+configName+".disabled"));
+	}
 	reply.put("returnValue", status);
 	return reply;
     }
@@ -616,14 +618,14 @@ public class IPKGService extends LunaServiceThread {
     }
 
     @LunaServiceThread.PublicMethod
-	public void toggleConfigState(ServiceMessage msg)
+	public void setConfigState(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
-	    if (msg.getJSONPayload().has("config")) {
-		msg.respond(doToggleConfigState(msg.getJSONPayload().getString("config").trim()).toString());
+	    if (msg.getJSONPayload().has("config") && msg.getJSONPayload().has("enabled")) {
+		msg.respond(doSetConfigState(msg.getJSONPayload().getString("config").trim(), msg.getJSONPayload().getBoolean("enabled")).toString());
 	    } else
 		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
-				 "Missing 'config' parameter");
+				 "Missing 'config' or 'enabled' parameter");
 	} else
 	    ipkgDirNotReady(msg);
     }
