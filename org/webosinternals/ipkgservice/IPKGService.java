@@ -1094,5 +1094,44 @@ public class IPKGService extends LunaServiceThread {
 	msg.respond(reply.toString());
     }
 
+    private JSONObject doListConfigs()
+	throws JSONException {
+	JSONArray cfgs = new JSONArray();
+	File[] configs = ipkgconfdir.listFiles();
+	for (File file : configs) {
+	    if (file.isFile()) {
+		String filename = file.getName();
+		if (!filename.equals("arch.conf")) {
+		    JSONObject entry = new JSONObject();
+		    Boolean enabled = true;
+		    if (!filename.endsWith(".disabled")) {
+			entry.put(filename, readFile(file, "<br>"));
+			cfgs.put(entry);
+		    }
+		}
+	    }
+	}
+	if (cfgs.length()>0) {
+	    JSONObject reply = new JSONObject();
+	    reply.put("configs",cfgs);
+	    return reply;
+	} else
+	    return null;
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void list_configs(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    JSONObject reply = doListConfigs();
+	    if (reply!=null)
+		msg.respond(reply.toString());
+	    else
+		msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				 "Failure during 'list configs' operation");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
 }
 
