@@ -249,11 +249,14 @@ public class IPKGService extends LunaServiceThread {
 		String filename = file.getName();
 		if (!filename.equals("arch.conf")) {
 		    JSONObject entry = new JSONObject();
+		    Boolean enabled = true;
 		    if (filename.endsWith(".disabled")) {
-			filename.replace(".disabled", "");
-			entry.put("disabled", true);
+			filename = filename.substring(0, filename.lastIndexOf(".disabled"));
+			enabled = false;
 		    }
-		    entry.put(filename, readFile(file, "<br>"));
+		    entry.put("config", filename);
+		    entry.put("contents", readFile(file, "<br>"));
+		    entry.put("enabled", enabled);
 		    cfgs.put(entry);
 		}
 	    }
