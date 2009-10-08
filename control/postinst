@@ -32,6 +32,9 @@ sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
 # Remove obsolete lists
 rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
 
+# Remove obsolete feeds
+rm -f /var/usr/lib/ipkg/lists/autopatch /var/etc/ipkg/autopatch.conf
+
 # Restart the service handler (this also starts this service)
 if [ -z "$IPKG_OFFLINE_ROOT" ]; then # Defined by recent installers that also support flags.
     /sbin/stop java-serviceboot
