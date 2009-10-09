@@ -689,17 +689,18 @@ public class IPKGService extends LunaServiceThread {
 					reply.put("stage","lock");
 					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,ro /");
-					reply.put("returnVal",ret.returnValue);
-					reply.put("returnValue",(ret.returnValue == 0));
+					// We're going to ignore failures from the remount
+					// reply.put("returnVal",ret.returnValue);
+					// reply.put("returnValue",(ret.returnValue == 0));
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
-					if (ret.returnValue!=0) {
-					    reply.put("stage","failed");
-					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-					    reply.put("errorText", "Failure during 'remount' operation");
-					    origmsg.respond(reply.toString());
-					    return;
-					}
+					// if (ret.returnValue!=0) {
+					// reply.put("stage","failed");
+					// reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+					// reply.put("errorText", "Failure during 'remount' operation");
+					// origmsg.respond(reply.toString());
+					// return;
+					// }
 				    }
 				    reply.put("stage","completed");
 				    origmsg.respond(reply.toString());
@@ -1037,7 +1038,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","5");
+	reply.put("apiVersion","6");
 	msg.respond(reply.toString());
     }
 
