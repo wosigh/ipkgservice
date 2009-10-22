@@ -49,6 +49,7 @@ public class IPKGService extends LunaServiceThread {
     private static final String ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
     private static final String ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
     private static final String ipkgStatusPath = "/var/usr/lib/ipkg/status";
+    private static final String ipkgApplicationBasePath = "/var/usr/palm/applications/";
 
     File ipkgconfdir;
     boolean ipkgReady = false;
@@ -488,6 +489,16 @@ public class IPKGService extends LunaServiceThread {
 	File controlfile = new File(filename);
 	if (controlfile.exists()) {
 	    return readList(controlfile, msg, false);
+	} else
+	    return null;
+    }
+
+    private JSONObject getRawAppinfo(String packageId, ServiceMessage msg)
+	throws JSONException, LSException {
+	String filename = ipkgApplicationBasePath + packageId + "/appinfo.json";
+	File appinfofile = new File(filename);
+	if (appinfofile.exists()) {
+	    return readList(appinfofile, msg, false);
 	} else
 	    return null;
     }
@@ -1051,6 +1062,24 @@ public class IPKGService extends LunaServiceThread {
 		else
 		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
 				     "Failure during 'getControlFile' operation");
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'package' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
+    @LunaServiceThread.PublicMethod
+	public void getAppinfoFile(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("package")) {
+		JSONObject reply = getRawAppinfo(msg.getJSONPayload().getString("package").trim(), msg);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'getAppinfoFile' operation");
 	    } else
 		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
 				 "Missing 'package' parameter");
