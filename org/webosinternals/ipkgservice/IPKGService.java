@@ -482,6 +482,16 @@ public class IPKGService extends LunaServiceThread {
 	    return null;
     }
 
+    private JSONObject getRawControl(String packageId, ServiceMessage msg)
+	throws JSONException, LSException {
+	String filename = ipkgScriptBasePath + packageId + ".control";
+	File controlfile = new File(filename);
+	if (controlfile.exists()) {
+	    return readList(controlfile, msg, false);
+	} else
+	    return null;
+    }
+
     /* ============================ DBUS Methods =============================*/
 
     @LunaServiceThread.PublicMethod
@@ -677,6 +687,16 @@ public class IPKGService extends LunaServiceThread {
 				    reply.put("returnVal",ret.returnValue);
 				    reply.put("returnValue",(ret.returnValue == 0));
 				    if (ret.returnValue!=0) {
+					// Remove the remnants of any package which was not installed properly
+					reply.put("stage","remove");
+					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+					reply.put("errorText", "Failure during 'postinst' operation");
+					origmsg.respond(reply.toString());
+					ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
+					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stdOut", ret.stdOut);
+					reply.put("stdErr", ret.stdErr);
 					reply.put("stage","failed");
 					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 					reply.put("errorText", "Failure during 'postinst' operation");
@@ -879,7 +899,6 @@ public class IPKGService extends LunaServiceThread {
 	public void confirmAdd(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret;
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
 		String hash = msg.getJSONPayload().getString("hash");
@@ -933,7 +952,6 @@ public class IPKGService extends LunaServiceThread {
     @LunaServiceThread.PublicMethod
 	public void confirmDelete(ServiceMessage msg)
 	throws JSONException, LSException {
-	ReturnResult ret;
 	JSONObject reply = new JSONObject();
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
@@ -1023,6 +1041,24 @@ public class IPKGService extends LunaServiceThread {
     }
 	
     @LunaServiceThread.PublicMethod
+	public void getControlFile(ServiceMessage msg)
+	throws JSONException, LSException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("package")) {
+		JSONObject reply = getRawControl(msg.getJSONPayload().getString("package").trim(), msg);
+		if (reply!=null)
+		    msg.respond(reply.toString());
+		else
+		    msg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
+				     "Failure during 'getControlFile' operation");
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'package' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+	
+    @LunaServiceThread.PublicMethod
 	public void status(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (ipkgReady) {
@@ -1038,7 +1074,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","6");
+	reply.put("apiVersion","7");
 	msg.respond(reply.toString());
     }
 
@@ -1104,7 +1140,6 @@ public class IPKGService extends LunaServiceThread {
 		String filename = file.getName();
 		if (!filename.equals("arch.conf")) {
 		    JSONObject entry = new JSONObject();
-		    Boolean enabled = true;
 		    if (!filename.endsWith(".disabled")) {
 			entry.put(filename, readFile(file, "<br>"));
 			cfgs.put(entry);
