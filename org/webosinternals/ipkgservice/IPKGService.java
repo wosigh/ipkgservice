@@ -353,14 +353,18 @@ public class IPKGService extends LunaServiceThread {
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
-	reply.put("stage","completed");
+	reply.put("stage","install");
 	reply.put("stdOut", ret.stdOut);
 	reply.put("stdErr", ret.stdErr);
+	msg.respond(reply.toString());
+	reply.remove("stdOut");
+	reply.remove("stdErr");
 	if (ret.returnValue==0) {
 	    String postinstPath = ipkgScriptBasePath + packageName + ".postinst";
 	    File postinst = new File(postinstPath);
 	    if (postinst.exists()) {
 		reply.put("stage","confirm");
+		reply.append("stdOut", "User consent requested for post-install script execution");
 		String script = readFile(postinst, "<br>");
 		JSONObject parameters = new JSONObject();
 		JSONObject params =  new JSONObject();
@@ -374,6 +378,9 @@ public class IPKGService extends LunaServiceThread {
 		parameters.put("params", params);
 		confirmations.put(hash, msg);
 		sendMessage("palm://com.palm.applicationManager/launch", parameters.toString(), "confirmationLaunchCallback");
+	    }
+	    else {
+		reply.put("stage","completed");
 	    }
 	} else {
 	    reply.put("stage","failed");
@@ -392,6 +399,7 @@ public class IPKGService extends LunaServiceThread {
 	    reply.put("returnVal", 0);
 	    reply.put("returnValue", true);
 	    reply.put("stage","confirm");
+	    reply.append("stdOut", "User consent requested for pre-remove script execution");
 	    String script = readFile(prerm, "<br>");
 	    JSONObject parameters = new JSONObject();
 	    JSONObject params =  new JSONObject();
@@ -409,13 +417,19 @@ public class IPKGService extends LunaServiceThread {
 	    ReturnResult ret = executeCMD(ipkgBaseCommand + "remove " + packageName);
 	    reply.put("returnVal",ret.returnValue);
 	    reply.put("returnValue",(ret.returnValue == 0));
-	    reply.put("stage","completed");
+	    reply.put("stage","remove");
 	    reply.put("stdOut", ret.stdOut);
 	    reply.put("stdErr", ret.stdErr);
+	    msg.respond(reply.toString());
+	    reply.remove("stdOut");
+	    reply.remove("stdErr");
 	    if (ret.returnValue!=0) {
 		reply.put("stage","failed");
 		reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 		reply.put("errorText", "Failure during 'remove' operation");
+	    }
+	    else {
+		reply.put("stage","completed");
 	    }
 	}
 	return reply;
@@ -666,6 +680,11 @@ public class IPKGService extends LunaServiceThread {
 		    reply.put("returnValue",true);
 		    msg.respond(reply.toString());
 		    if (confirmation) {
+			reply.put("returnVal", 0);
+			reply.put("returnValue", true);
+			reply.put("stage","approve");
+			reply.append("stdOut", "User approved post-install script execution");
+			origmsg.respond(reply.toString());
 			if (origmsg.getJSONPayload().has("package")) {
 			    String pkg = origmsg.getJSONPayload().getString("package").trim();
 			    if (checkArg(pkg)) {
@@ -673,15 +692,15 @@ public class IPKGService extends LunaServiceThread {
 				File postinst = new File(postinstPath);
 				if (postinst.exists()) {
 				    if (isEmulator == false) {
-					reply.put("returnVal",0);
-					reply.put("returnValue",true);
-					reply.put("stage","unlock");
-					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stage","unlock");
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
+					origmsg.respond(reply.toString());
+					reply.remove("stdOut");
+					reply.remove("stdErr");
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -690,41 +709,47 @@ public class IPKGService extends LunaServiceThread {
 					    return;
 					}
 				    }
-				    reply.put("stage","postinst");
-				    origmsg.respond(reply.toString());
 				    ret = executeCMD(postinstPath);
-				    reply.put("stdOut", ret.stdOut);
-				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
 				    reply.put("returnValue",(ret.returnValue == 0));
+				    reply.put("stage","postinst");
+				    reply.put("stdOut", ret.stdOut);
+				    reply.put("stdErr", ret.stdErr);
+				    origmsg.respond(reply.toString());
+				    reply.remove("stdOut");
+				    reply.remove("stdErr");
 				    if (ret.returnValue!=0) {
 					// Remove the remnants of any package which was not installed properly
-					reply.put("stage","remove");
-					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-					reply.put("errorText", "Failure during 'postinst' operation");
-					origmsg.respond(reply.toString());
 					ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
 					reply.put("returnVal",ret.returnValue);
 					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stage","remove");
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
+					origmsg.respond(reply.toString());
+					reply.remove("stdOut");
+					reply.remove("stdErr");
+					reply.put("returnVal",1);
+					reply.put("returnValue",false);
 					reply.put("stage","failed");
 					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-					reply.put("errorText", "Failure during 'postinst' operation");
+					reply.put("errorText", "Failure during post-install script execution");
 					origmsg.respond(reply.toString());
 					return;
 				    }
 				    if (isEmulator == false) {
-					reply.put("returnVal",0);
-					reply.put("returnValue",true);
-					reply.put("stage","lock");
-					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,ro /");
-					// We're going to ignore failures from the remount
-					// reply.put("returnVal",ret.returnValue);
-					// reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("returnVal",ret.returnValue);
+					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stage","lock");
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
+					origmsg.respond(reply.toString());
+					reply.remove("stdOut");
+					reply.remove("stdErr");
+					// We're going to ignore failures from the remount
+					reply.put("returnVal",0);
+					reply.put("returnValue",true);
 					// if (ret.returnValue!=0) {
 					// reply.put("stage","failed");
 					// reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -752,13 +777,41 @@ public class IPKGService extends LunaServiceThread {
 			    return;
 			}
 		    } else {
-			reply.put("returnVal",1);
-			reply.put("returnValue",false);
-			reply.put("stage","failed");
-			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-			reply.put("errorText","User cancelled post install script execution");
+			reply.put("returnVal", 1);
+			reply.put("returnValue", false);
+			reply.put("stage","cancel");
+			reply.append("stdErr", "User cancelled post-install script execution");
 			origmsg.respond(reply.toString());
-			return;
+			if (origmsg.getJSONPayload().has("package")) {
+			    String pkg = origmsg.getJSONPayload().getString("package").trim();
+			    if (checkArg(pkg)) {
+				// Remove the remnants of any package which was not installed properly
+				ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
+				reply.put("returnVal",ret.returnValue);
+				reply.put("returnValue",(ret.returnValue == 0));
+				reply.put("stage","remove");
+				reply.put("stdOut", ret.stdOut);
+				reply.put("stdErr", ret.stdErr);
+				origmsg.respond(reply.toString());
+				reply.remove("stdOut");
+				reply.remove("stdErr");
+				reply.put("returnVal",1);
+				reply.put("returnValue",false);
+				reply.put("stage","failed");
+				reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+				reply.put("errorText","User cancelled post-install script execution");
+				origmsg.respond(reply.toString());
+				return;
+			    } else {
+				origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						     "Invalid 'package' parameter");
+				return;
+			    }
+			} else {
+			    origmsg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+						 "Missing 'package' parameter");
+			    return;
+			}
 		    }
 		} else {
 		    msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
@@ -791,6 +844,10 @@ public class IPKGService extends LunaServiceThread {
 		    reply.put("returnValue",true);
 		    msg.respond(reply.toString());
 		    if (confirmation) {
+			reply.put("returnVal", 0);
+			reply.put("returnValue", true);
+			reply.put("stage","approve");
+			reply.append("stdOut", "User approved pre-remove script execution");
 			if (origmsg.getJSONPayload().has("package")) {
 			    String pkg = origmsg.getJSONPayload().getString("package").trim();
 			    if (checkArg(pkg)) {
@@ -798,15 +855,15 @@ public class IPKGService extends LunaServiceThread {
 				File prerm = new File(prermPath);
 				if (prerm.exists()) {
 				    if (isEmulator == false) {
-					reply.put("returnVal",0);
-					reply.put("returnValue",true);
-					reply.put("stage","unlock");
-					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,rw /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stage","unlock");
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
+					origmsg.respond(reply.toString());
+					reply.remove("stdOut");
+					reply.remove("stdErr");
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -815,30 +872,32 @@ public class IPKGService extends LunaServiceThread {
 					    return;
 					}
 				    }
-				    reply.put("stage","prerm");
-				    origmsg.respond(reply.toString());
 				    ret = executeCMD(prermPath);
-				    reply.put("stdOut", ret.stdOut);
-				    reply.put("stdErr", ret.stdErr);
 				    reply.put("returnVal",ret.returnValue);
 				    reply.put("returnValue",(ret.returnValue == 0));
+				    reply.put("stage","prerm");
+				    reply.put("stdOut", ret.stdOut);
+				    reply.put("stdErr", ret.stdErr);
+				    origmsg.respond(reply.toString());
+				    reply.remove("stdOut");
+				    reply.remove("stdErr");
 				    if (ret.returnValue!=0) {
 					reply.put("stage","failed");
 					reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-					reply.put("errorText", "Failure during 'prerm' operation");
+					reply.put("errorText", "Failure during pre-remove script execution");
 					origmsg.respond(reply.toString());
 					return;
 				    }
 				    if (isEmulator == false) {
-					reply.put("returnVal",0);
-					reply.put("returnValue",true);
-					reply.put("stage","lock");
-					origmsg.respond(reply.toString());
 					ret = executeCMD("/bin/mount -o remount,ro /");
 					reply.put("returnVal",ret.returnValue);
 					reply.put("returnValue",(ret.returnValue == 0));
+					reply.put("stage","lock");
 					reply.put("stdOut", ret.stdOut);
 					reply.put("stdErr", ret.stdErr);
+					origmsg.respond(reply.toString());
+					reply.remove("stdOut");
+					reply.remove("stdErr");
 					if (ret.returnValue!=0) {
 					    reply.put("stage","failed");
 					    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -847,8 +906,6 @@ public class IPKGService extends LunaServiceThread {
 					    return;
 					}
 				    }
-				    reply.put("stage","remove");
-				    origmsg.respond(reply.toString());
 				    // pass-through
 				} else {
 				    origmsg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
@@ -858,8 +915,12 @@ public class IPKGService extends LunaServiceThread {
 				ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
 				reply.put("returnVal",ret.returnValue);
 				reply.put("returnValue",(ret.returnValue == 0));
+				reply.put("stage","remove");
 				reply.put("stdOut", ret.stdOut);
 				reply.put("stdErr", ret.stdErr);
+				origmsg.respond(reply.toString());
+				reply.remove("stdOut");
+				reply.remove("stdErr");
 				if (ret.returnValue!=0) {
 				    reply.put("stage","failed");
 				    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
@@ -882,11 +943,17 @@ public class IPKGService extends LunaServiceThread {
 			    return;
 			}
 		    } else {
+			reply.put("returnVal", 1);
+			reply.put("returnValue", false);
+			reply.put("stage","cancel");
+			reply.append("stdErr", "User cancelled pre-remove script execution");
+			origmsg.respond(reply.toString());
+			reply.remove("stdErr");
 			reply.put("returnVal",1);
 			reply.put("returnValue",false);
 			reply.put("stage","failed");
 			reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-			reply.put("errorText","User cancelled pre remove script execution");
+			reply.put("errorText","User cancelled pre-remove script execution");
 			origmsg.respond(reply.toString());
 			return;
 		    }
