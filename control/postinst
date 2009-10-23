@@ -36,7 +36,7 @@ rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipk
 rm -f /var/usr/lib/ipkg/lists/autopatch /var/etc/ipkg/autopatch.conf
 
 # Retain disabled status of feeds
-if [ "ls /var/etc/ipkg/*.disabled" ] ; then
+if [ "`ls /var/etc/ipkg/*.disabled`" ] ; then
   for f in /var/etc/ipkg/*.disabled ; do
     if [ -f /var/etc/ipkg/`basename $f .disabled` ] ; then
       rm -f $f
