@@ -17,6 +17,7 @@ ln -s /etc/ipkg/arch.conf /var/etc/ipkg/arch.conf
 # Install the ipkg wrapper
 /usr/bin/ipkg -o /var remove org.webosinternals.fairdinkum
 rm -f /usr/local/bin/ipkg
+mkdir -p /usr/local/bin
 ln -s /var/usr/palm/applications/org.webosinternals.ipkgservice/files/ipkg /usr/local/bin/ipkg
 
 # Install webosinternals feeds
