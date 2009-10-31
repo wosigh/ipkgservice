@@ -7,6 +7,10 @@ start on started java-serviceboot
 script
    logger "org.webosinternals.ipkgservice upstart: script called"
 
+   # Configure the webos-patches feed
+   VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
+   sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" /var/etc/ipkg/webos-patches.conf
+
    sleep 10
    logger "org.webosinternals.ipkgservice upstart: delay done"
 
