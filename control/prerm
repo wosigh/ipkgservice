@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Remove the ipkg wrapper
+rm -f /usr/local/bin/ipkg
+
 # Stop the service
 /sbin/stop org.webosinternals.ipkgservice
 

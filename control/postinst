@@ -14,6 +14,11 @@ cp /var/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinterna
 rm -f /var/etc/ipkg/arch.conf
 ln -s /etc/ipkg/arch.conf /var/etc/ipkg/arch.conf
 
+# Install the ipkg wrapper
+/usr/bin/ipkg -o /var remove org.webosinternals.fairdinkum
+rm -f /usr/local/bin/ipkg
+ln -s /var/usr/palm/applications/org.webosinternals.ipkgservice/files/ipkg /usr/local/bin/ipkg
+
 # Install webosinternals feeds
 echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" > /var/etc/ipkg/webos-internals.conf
 echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> /var/etc/ipkg/webos-internals.conf
