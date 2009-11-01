@@ -10,7 +10,9 @@ PARENT=$(ps -o comm --no-heading -p $PPID)
 #echo "PARENT: $PARENT[$PPID]" >> /tmp/ipkg-called
 
 if [ "$PARENT" = "LunaSysMgr" -a "$*" = "-o /var list" ] ; then
-  exec /usr/bin/ipkg -o /var list_installed
+  # We should execute the following, but need to give a valid dummy response instead
+  # exec /usr/bin/ipkg -o /var list_installed
+  echo "org.webosinternals.ipkgservice - 1.0.0 - Package Manager Service"
 else
   exec /usr/bin/ipkg "$@"
 fi
