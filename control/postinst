@@ -30,16 +30,12 @@ echo "src/gz optware http://ipkg.preware.org/feeds/optware/all" > /var/etc/ipkg/
 echo "src/gz optware-`/bin/uname -m` http://ipkg.preware.org/feeds/optware/`/bin/uname -m`" >> /var/etc/ipkg/optware.conf
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/optware.conf
 
-# Install preyourmind feeds
-echo "src/gz preyourmind http://preyourmind.org/services/feed/arch_all" > /var/etc/ipkg/preyourmind.conf
-echo "src/gz preyourmind-`/bin/uname -m` http://preyourmind.org/services/feed/arch_`/bin/uname -m`" >> /var/etc/ipkg/preyourmind.conf
-sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/preyourmind.conf
-
 # Remove obsolete lists
 rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
 
 # Remove obsolete feeds
-rm -f /var/usr/lib/ipkg/lists/autopatch /var/etc/ipkg/autopatch.conf
+rm -f /var/usr/lib/ipkg/lists/autopatch* /var/etc/ipkg/autopatch.conf*
+rm -f /var/usr/lib/ipkg/lists/preyourmind* /var/etc/ipkg/preyourmind.conf*
 
 # Configure the webos-patches feed
 VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
