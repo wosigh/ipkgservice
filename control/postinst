@@ -24,14 +24,13 @@ ln -s /var/usr/palm/applications/org.webosinternals.ipkgservice/files/ipkg /usr/
 echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" > /var/etc/ipkg/webos-internals.conf
 echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> /var/etc/ipkg/webos-internals.conf
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/webos-internals.conf
+sed -i -e 's|armv6l|armv6|g' /var/etc/ipkg/webos-internals.conf
 
 # Install optware feeds
 echo "src/gz optware http://ipkg.preware.org/feeds/optware/all" > /var/etc/ipkg/optware.conf
 echo "src/gz optware-`/bin/uname -m` http://ipkg.preware.org/feeds/optware/`/bin/uname -m`" >> /var/etc/ipkg/optware.conf
 sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/optware.conf
-
-# Remove obsolete lists
-rm -f /var/usr/lib/ipkg/lists/all /var/usr/lib/ipkg/lists/armv7 /var/usr/lib/ipkg/lists/i686
+sed -i -e 's|armv6l|armv6|g' /var/etc/ipkg/optware.conf
 
 # Remove obsolete feeds
 rm -f /var/usr/lib/ipkg/lists/autopatch* /var/etc/ipkg/autopatch.conf*
