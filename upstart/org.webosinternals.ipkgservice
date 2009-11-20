@@ -35,6 +35,10 @@ script
    logger "org.webosinternals.ipkgservice upstart: $tries"
 
    logger "org.webosinternals.ipkgservice upstart: done"
+
+   sleep 50
+
 end script
 
-#respawn
+# Unfortunately, we need this to work-around the undiagnosible problem.
+respawn
