@@ -1,4 +1,5 @@
 *.class
+jars
 Utils.jar
 json.jar
 lunaservice.jar
