@@ -354,6 +354,16 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException {
 	JSONObject reply = new JSONObject();
 	Boolean status;
+	ReturnResult ret;
+	if (isEmulator == false) {
+	    ret = executeCMD("/bin/mount -o remount,rw /");
+	    if (ret.returnValue!=0) {
+		reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+		reply.put("errorText", "Failure during 'remount' operation");
+		reply.put("returnValue", 1);
+		return reply;
+	    }
+	}
 	if (enabled) {
 	    File config = new File("/usr/local/bin/ipkg.disabled");
 	    status = config.renameTo(new File("/usr/local/bin/ipkg"));
@@ -361,6 +371,10 @@ public class IPKGService extends LunaServiceThread {
 	else {
 	    File config = new File("/usr/local/bin/ipkg");
 	    status = config.renameTo(new File("/usr/local/bin/ipkg.disabled"));
+	}
+	if (isEmulator == false) {
+	    ret = executeCMD("/bin/mount -o remount,ro /");
+	    // We're going to ignore failures from the remount
 	}
 	reply.put("returnValue", status);
 	return reply;
