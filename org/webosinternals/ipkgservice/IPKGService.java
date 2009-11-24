@@ -1056,6 +1056,7 @@ public class IPKGService extends LunaServiceThread {
 			if (origmsg.getJSONPayload().has("config")) {
 			    String config = origmsg.getJSONPayload().getString("config").trim();
 			    if (checkArg(config)) {
+				// DO STUFF HERE
 				reply.put("stage","completed");
 				origmsg.respond(reply.toString());
 			    } else {
@@ -1110,6 +1111,7 @@ public class IPKGService extends LunaServiceThread {
 			if (origmsg.getJSONPayload().has("config")) {
 			    String config = origmsg.getJSONPayload().getString("config").trim();
 			    if (checkArg(config)) {
+				// DO STUFF HERE
 				reply.put("stage","completed");
 				origmsg.respond(reply.toString());
 				return;
