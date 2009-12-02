@@ -7,13 +7,19 @@ start on started java-serviceboot
 script
    logger "org.webosinternals.ipkgservice upstart: script called"
 
+   if [ -d /media/cryptofs/apps ] ; then
+      APPS=/media/cryptofs/apps
+   else
+      APPS=/var
+   fi
+
    # Configure the webos-patches feed
    VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
-   if [ -f /var/etc/ipkg/webos-patches.conf ] ; then
-      sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" /var/etc/ipkg/webos-patches.conf
+   if [ -f $APPS/etc/ipkg/webos-patches.conf ] ; then
+      sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf
    fi  
-   if [ -f /var/etc/ipkg/webos-patches.conf.disabled ] ; then
-      sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" /var/etc/ipkg/webos-patches.conf.disabled
+   if [ -f $APPS/etc/ipkg/webos-patches.conf.disabled ] ; then
+      sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf.disabled
    fi  
 
    sleep 10
