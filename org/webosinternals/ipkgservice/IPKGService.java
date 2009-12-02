@@ -44,17 +44,19 @@ import org.json.JSONObject;
 public class IPKGService extends LunaServiceThread {
 
     /* ============================== Variables ==============================*/
-    private static final String ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
-    private static final String ipkgConfigDirPath = "/var/etc/ipkg";
-    private static final String ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
-    private static final String ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
-    private static final String ipkgStatusPath = "/var/usr/lib/ipkg/status";
-    private static final String ipkgApplicationBasePath = "/var/usr/palm/applications/";
+    private String ipkgBaseCommand;
+    private String ipkgOfflineRoot;
+    private String ipkgConfigDirPath;
+    private String ipkgScriptBasePath;
+    private String ipkgListsBasePath;
+    private String ipkgStatusPath;
+    private String ipkgApplicationBasePath;
 
-    File ipkgconfdir;
-    boolean ipkgReady = false;
-    boolean isEmulator = false;
-    SessionIDGenerator idgen = new SessionIDGenerator();
+    private File ipkgconfdir;
+    private boolean ipkgReady = false;
+    private boolean isEmulator = false;
+    private boolean hasCryptoFS = false;
+    private SessionIDGenerator idgen = new SessionIDGenerator();
     private HashMap<String, ServiceMessage> confirmations = new HashMap<String, ServiceMessage>();
 
     /**
@@ -77,6 +79,27 @@ public class IPKGService extends LunaServiceThread {
     public IPKGService() {
 	File buildinfo = new File("/etc/palm-build-info");
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
+	File cryptofs = new File("/media/cryptofs/apps");
+	if (cryptofs.exists()) {
+	    hasCryptoFS = true;
+	    ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
+	    ipkgOfflineRoot = "/media/cryptofs/apps";
+	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
+	    ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
+	    ipkgListsBasePath = "/media/cryptofs/apps/usr/lib/ipkg/lists/";
+	    ipkgStatusPath = "/media/cryptofs/apps/usr/lib/ipkg/status";
+	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
+	}
+	else {
+	    hasCryptoFS = false;
+	    ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
+	    ipkgOfflineRoot = "/var";
+	    ipkgConfigDirPath = "/var/etc/ipkg";
+	    ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
+	    ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
+	    ipkgStatusPath = "/var/usr/lib/ipkg/status";
+	    ipkgApplicationBasePath = "/var/usr/palm/applications/";
+	}
 	ipkgconfdir = new File(ipkgConfigDirPath);
 	if (ipkgconfdir.exists()) {
 	    if (ipkgconfdir.isDirectory())
@@ -196,7 +219,7 @@ public class IPKGService extends LunaServiceThread {
 	try {
 	    ProcessBuilder builder = new ProcessBuilder(command.split(" "));
 	    Map<String,String> env = builder.environment();
-	    env.put("IPKG_OFFLINE_ROOT", "/var");
+	    env.put("IPKG_OFFLINE_ROOT", ipkgOfflineRoot);
 	    env.put("PKG_ROOT", "/");
 	    Process p = builder.start();
 	    InputStream stdout = p.getInputStream();

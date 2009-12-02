@@ -1,51 +1,66 @@
 #!/bin/sh
 
-# Install the java dbus service
-rm -f /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
-ln -s /var/usr/lib/luna/java/org.webosinternals.ipkgservice.jar /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
-rm -f /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
-ln -s /var/usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
-
-# Install the upstart script
-rm -f /etc/event.d/org.webosinternals.ipkgservice
-cp /var/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinternals.ipkgservice
-
-# Set up the architecture configuration file
-rm -f /var/etc/ipkg/arch.conf
-ln -s /etc/ipkg/arch.conf /var/etc/ipkg/arch.conf
-
-# Install the ipkg wrapper
+# Remove the ipkg wrapper
 /usr/bin/ipkg -o /var remove org.webosinternals.fairdinkum
 rm -f /usr/local/bin/ipkg
-mkdir -p /usr/local/bin
-ln -s /var/usr/palm/applications/org.webosinternals.ipkgservice/files/ipkg /usr/local/bin/ipkg
-
-# Install webosinternals feeds
-echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" > /var/etc/ipkg/webos-internals.conf
-echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> /var/etc/ipkg/webos-internals.conf
-sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/webos-internals.conf
-sed -i -e 's|armv6l|armv6|g' /var/etc/ipkg/webos-internals.conf
-
-# Install optware feeds
-echo "src/gz optware http://ipkg.preware.org/feeds/optware/all" > /var/etc/ipkg/optware.conf
-echo "src/gz optware-`/bin/uname -m` http://ipkg.preware.org/feeds/optware/`/bin/uname -m`" >> /var/etc/ipkg/optware.conf
-sed -i -e 's|armv7l|armv7|g' /var/etc/ipkg/optware.conf
-sed -i -e 's|armv6l|armv6|g' /var/etc/ipkg/optware.conf
 
 # Remove obsolete feeds
 rm -f /var/usr/lib/ipkg/lists/autopatch* /var/etc/ipkg/autopatch.conf*
 rm -f /var/usr/lib/ipkg/lists/preyourmind* /var/etc/ipkg/preyourmind.conf*
 
+# New app installation area?
+if [ -d /media/cryptofs/apps ] ; then
+  APPS=/media/crytpfs/apps
+
+  # Remove obsolete paths
+  rm -rf /var/usr/palm/applications/org.webosinternals.ipkgservice
+  rm -f /var/usr/lib/luna/java/org.webosinternals.ipkgservice.jar
+  rm -f /var/usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
+  rm -f /var/etc/event.d/org.webosinternals.ipkgservice
+else
+  APPS=/var
+
+  # Install the ipkg wrapper
+  mkdir -p /usr/local/bin
+  cp /var/usr/palm/applications/org.webosinternals.ipkgservice/files/ipkg /usr/local/bin/ipkg
+fi
+
+# Install the java dbus service
+rm -f /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
+cp $APPS/usr/lib/luna/java/org.webosinternals.ipkgservice.jar /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
+rm -f /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
+cp $APPS/usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service /usr/share/dbus-1/system-services/org.webosinternals.ipkgservice.service
+
+# Install the upstart script
+rm -f /etc/event.d/org.webosinternals.ipkgservice
+cp $APPS/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinternals.ipkgservice
+
+# Set up the architecture configuration file
+rm -f $APPS/etc/ipkg/arch.conf
+cp /etc/ipkg/arch.conf $APPS/etc/ipkg/arch.conf
+
+# Install webosinternals feeds
+echo "src/gz webosinternals http://ipkg.preware.org/feeds/webos-internals/all" > $APPS/etc/ipkg/webos-internals.conf
+echo "src/gz webosinternals-`/bin/uname -m` http://ipkg.preware.org/feeds/webos-internals/`/bin/uname -m`" >> $APPS/etc/ipkg/webos-internals.conf
+sed -i -e 's|armv7l|armv7|g' $APPS/etc/ipkg/webos-internals.conf
+sed -i -e 's|armv6l|armv6|g' $APPS/etc/ipkg/webos-internals.conf
+
+# Install optware feeds
+echo "src/gz optware http://ipkg.preware.org/feeds/optware/all" > $APPS/etc/ipkg/optware.conf
+echo "src/gz optware-`/bin/uname -m` http://ipkg.preware.org/feeds/optware/`/bin/uname -m`" >> $APPS/etc/ipkg/optware.conf
+sed -i -e 's|armv7l|armv7|g' $APPS/etc/ipkg/optware.conf
+sed -i -e 's|armv6l|armv6|g' $APPS/etc/ipkg/optware.conf
+
 # Configure the webos-patches feed
 VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
-sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" /var/etc/ipkg/webos-patches.conf
+sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf
 
 # Retain disabled status of feeds
-if [ "`ls /var/etc/ipkg/*.disabled`" ] ; then
-  for f in /var/etc/ipkg/*.disabled ; do
-    if [ -f /var/etc/ipkg/`basename $f .disabled` ] ; then
+if [ "`ls $APPS/etc/ipkg/*.disabled`" ] ; then
+  for f in $APPS/etc/ipkg/*.disabled ; do
+    if [ -f $APPS/etc/ipkg/`basename $f .disabled` ] ; then
       rm -f $f
-      mv /var/etc/ipkg/`basename $f .disabled` $f
+      mv $APPS/etc/ipkg/`basename $f .disabled` $f
     fi
   done
 fi
