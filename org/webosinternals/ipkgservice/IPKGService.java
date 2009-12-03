@@ -214,6 +214,7 @@ public class IPKGService extends LunaServiceThread {
      */
     private ReturnResult executeCMD(String command) {
 	int ret = 1;
+	Boolean override = false;
 	ArrayList<String> output = new ArrayList<String>();
 	ArrayList<String> errors = new ArrayList<String>();
 	try {
@@ -233,7 +234,13 @@ public class IPKGService extends LunaServiceThread {
 	    
 	    String line;
 	    while ((line = bufferedstdoutreader.readLine()) != null) {
-		output.add(line);
+		if (line.startsWith("Collected errors:")) {
+		    errors.add(line);
+		    override = true;
+		}
+		else {
+		    output.add(line);
+		}
 	    }
 	    while ((line = bufferedstderrreader.readLine()) != null) {
 		errors.add(line);
@@ -244,8 +251,9 @@ public class IPKGService extends LunaServiceThread {
 		    System.err.println("exit value = " + p.exitValue());
 		    ret = p.exitValue();
 		}
-		else
+		else {
 		    ret = 0;
+		}
 	    } catch (InterruptedException e) {
 		System.err.println(e);
 	    } finally {
@@ -261,6 +269,9 @@ public class IPKGService extends LunaServiceThread {
 	} catch (IOException e) {
 	    System.err.println(e.getMessage());
 	}
+
+	if (override) ret = 1;
+
 	return new ReturnResult(ret, output, errors);
     }
 
