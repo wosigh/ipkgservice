@@ -55,7 +55,6 @@ public class IPKGService extends LunaServiceThread {
     private File ipkgconfdir;
     private boolean ipkgReady = false;
     private boolean isEmulator = false;
-    private boolean hasCryptoFS = false;
     private SessionIDGenerator idgen = new SessionIDGenerator();
     private HashMap<String, ServiceMessage> confirmations = new HashMap<String, ServiceMessage>();
 
@@ -81,7 +80,6 @@ public class IPKGService extends LunaServiceThread {
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
 	File cryptofs = new File("/media/cryptofs/apps");
 	if (cryptofs.exists()) {
-	    hasCryptoFS = true;
 	    ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
@@ -91,7 +89,6 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
 	}
 	else {
-	    hasCryptoFS = false;
 	    ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
 	    ipkgOfflineRoot = "/var";
 	    ipkgConfigDirPath = "/var/etc/ipkg";
@@ -367,7 +364,6 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doGetIpkgWrapperState()
 	throws JSONException {
 	JSONObject reply = new JSONObject();
-	Boolean enabled;
 	File wrapper;
 
 	reply.put("returnValue", false);
