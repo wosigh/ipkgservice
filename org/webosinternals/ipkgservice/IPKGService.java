@@ -542,7 +542,7 @@ public class IPKGService extends LunaServiceThread {
 	reply.put("stdErr", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'restartluna' operation");
+	    reply.put("errorText", "Failure during 'restartLuna' operation");
 	}
 	return reply;
     }
@@ -556,7 +556,21 @@ public class IPKGService extends LunaServiceThread {
 	reply.put("stdErr", ret.stdErr.toString());
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'restartjava' operation");
+	    reply.put("errorText", "Failure during 'restartJava' operation");
+	}
+	return reply;
+    }
+
+    private JSONObject doRestartDevice(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = new JSONObject();
+	ReturnResult ret = executeCMD("tellbootie");
+	reply.put("returnValue",(ret.returnValue == 0));
+	reply.put("stdOut", ret.stdOut.toString());
+	reply.put("stdErr", ret.stdErr.toString());
+	if (ret.returnValue!=0) {
+	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+	    reply.put("errorText", "Failure during 'restartDevice' operation");
 	}
 	return reply;
     }
@@ -667,6 +681,13 @@ public class IPKGService extends LunaServiceThread {
 	public void restartJava(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = doRestartJava(msg);
+	msg.respond(reply.toString());
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void restartDevice(ServiceMessage msg)
+	throws JSONException, LSException {
+	JSONObject reply = doRestartDevice(msg);
 	msg.respond(reply.toString());
     }
 
@@ -1272,7 +1293,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","8");
+	reply.put("apiVersion","9");
 	msg.respond(reply.toString());
     }
 
