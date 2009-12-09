@@ -470,7 +470,7 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doRemove(String packageName, String title, ServiceMessage msg)
+    private JSONObject doRemove(String packageName, String title, Boolean replace, ServiceMessage msg)
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	JSONObject reply = new JSONObject();
 	String prermPath = ipkgScriptBasePath + packageName + ".prerm";
@@ -486,7 +486,12 @@ public class IPKGService extends LunaServiceThread {
 	    String hash = idgen.nextSessionId();
 	    params.put("package", packageName);
 	    params.put("title", title);
-	    params.put("type", "remove");
+	    if (replace) {
+		params.put("type", "replace");
+	    }
+	    else {
+		params.put("type", "remove");
+	    }
 	    params.put("script", script);
 	    params.put("hash", hash);
 	    parameters.put("id","org.webosinternals.ipkgservice");
@@ -507,6 +512,9 @@ public class IPKGService extends LunaServiceThread {
 		reply.put("stage","failed");
 		reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 		reply.put("errorText", "Failure during 'remove' operation");
+	    }
+	    else if (replace) {
+		return doInstall(packageName, title, msg);
 	    }
 	    else {
 		reply.put("stage","completed");
@@ -639,7 +647,25 @@ public class IPKGService extends LunaServiceThread {
 		String pkg = msg.getJSONPayload().getString("package").trim();
 		String title = msg.getJSONPayload().getString("title").trim();
 		if (checkArg(pkg)) {
-		    JSONObject reply = doRemove(pkg, title, msg);
+		    JSONObject reply = doRemove(pkg, title, false, msg);
+		    msg.respond(reply.toString());
+		}
+	    } else
+		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
+				 "Missing 'package' parameter");
+	} else
+	    ipkgDirNotReady(msg);
+    }
+
+    @LunaServiceThread.PublicMethod
+	public void replace(ServiceMessage msg)
+	throws JSONException, LSException, NoSuchAlgorithmException {
+	if (ipkgReady) {
+	    if (msg.getJSONPayload().has("package")) {
+		String pkg = msg.getJSONPayload().getString("package").trim();
+		String title = msg.getJSONPayload().getString("title").trim();
+		if (checkArg(pkg)) {
+		    JSONObject reply = doRemove(pkg, title, true, msg);
 		    msg.respond(reply.toString());
 		}
 	    } else
