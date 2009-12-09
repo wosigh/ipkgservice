@@ -974,7 +974,7 @@ public class IPKGService extends LunaServiceThread {
     
     @LunaServiceThread.PublicMethod
 	public void confirmRemove(ServiceMessage msg)
-	throws JSONException, LSException {
+	throws JSONException, LSException, NoSuchAlgorithmException {
 	ReturnResult ret;
 	JSONObject reply = new JSONObject();
 	if (ipkgReady) {
@@ -1064,10 +1064,16 @@ public class IPKGService extends LunaServiceThread {
 				origmsg.respond(reply.toString());
 				reply.remove("stdOut");
 				reply.remove("stdErr");
+				String title = origmsg.getJSONPayload().getString("title");
+				Boolean replace = msg.getJSONPayload().getBoolean("replace");
 				if (ret.returnValue!=0) {
 				    reply.put("stage","failed");
 				    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 				    reply.put("errorText", "Failure during 'remove' operation");
+				    origmsg.respond(reply.toString());
+				    return;
+				} else if (replace) {
+				    reply = doInstall(pkg, title, origmsg);
 				    origmsg.respond(reply.toString());
 				    return;
 				} else {

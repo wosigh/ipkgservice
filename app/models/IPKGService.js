@@ -12,10 +12,10 @@ IPKGService.confirmInstall = function(callback, hash, confirmation) {
 	return request;
 }
 
-IPKGService.confirmRemove = function(callback, hash, confirmation) {
+IPKGService.confirmRemove = function(callback, hash, confirmation, replace) {
 	var request = new Mojo.Service.Request(IPKGService.identifier, {
 		method: 'confirmRemove',
-		parameters: {"hash":hash,"confirmation":confirmation},
+		parameters: {"hash":hash,"confirmation":confirmation,"replace":replace},
 		onSuccess: callback,
 		onFailure: callback
 	});

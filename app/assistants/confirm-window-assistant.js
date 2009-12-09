@@ -16,6 +16,7 @@ ConfirmWindowAssistant.prototype.setup = function()
 	// fill in wordage for type of confirmation
 	if (this.params.type === "install") this.controller.get('type').innerHTML = ' after installation';
 	else if (this.params.type === "remove") this.controller.get('type').innerHTML = ' before removal';
+	else if (this.params.type === "replace") this.controller.get('type').innerHTML = ' before replacement';
 	
 	// setup buttons
 	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
@@ -35,7 +36,10 @@ ConfirmWindowAssistant.prototype.okButton = function()
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
 	}
 	if (this.params.type === "remove") {
-	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true);
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true, false);
+	}
+	if (this.params.type === "replace") {
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, true, true);
 	}
 	
 	// if the ok is successful
@@ -74,7 +78,10 @@ ConfirmWindowAssistant.prototype.cancelButton = function()
 	    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 	}
 	if (this.params.type === "remove") {
-	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false, false);
+	}
+	if (this.params.type === "replace") {
+	    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false, true);
 	}
 	
 	// if the cancel is successful
@@ -105,7 +112,10 @@ ConfirmWindowAssistant.prototype.deactivate = function(event)
 		    IPKGService.confirmInstall(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
 		}
 		if (this.params.type === "remove") {
-		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false);
+		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false, false);
+		}
+		if (this.params.type === "replace") {
+		    IPKGService.confirmRemove(this.confirmCallback.bindAsEventListener(this), this.params.hash, false, true);
 		}
 	}
 }
