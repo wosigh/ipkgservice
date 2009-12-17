@@ -454,7 +454,7 @@ public class IPKGService extends LunaServiceThread {
 	
     public void confirmationLaunchCallback(ServiceMessage msg) {}
 
-    private void executePostinst(String pkg, String postinstPath, ServiceMessage msg)
+    private Boolean executePostinst(String pkg, String postinstPath, ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret;
@@ -463,7 +463,7 @@ public class IPKGService extends LunaServiceThread {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during 'remount' operation");
 	    msg.respond(reply.toString());
-	    return;
+	    return false;
 	}
 	ret = executeCMD(postinstPath);
 	reply.put("returnVal",ret.returnValue);
@@ -474,6 +474,9 @@ public class IPKGService extends LunaServiceThread {
 	msg.respond(reply.toString());
 	reply.remove("stdOut");
 	reply.remove("stdErr");
+	if (!lockRootfs(msg)) {
+	    // We're going to ignore failures from the remount
+	}
 	if (ret.returnValue!=0) {
 	    // Remove the remnants of any package which was not installed properly
 	    ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
@@ -491,14 +494,9 @@ public class IPKGService extends LunaServiceThread {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during post-install script execution");
 	    msg.respond(reply.toString());
-	    return;
+	    return false;
 	}
-	if (!lockRootfs(msg)) {
-	    // We're going to ignore failures from the remount
-	}
-	reply.put("stage","completed");
-	msg.respond(reply.toString());
-	return;
+	return true;
     }
 
     private synchronized void doInstall(String packageName, String title, ServiceMessage msg)
@@ -529,8 +527,10 @@ public class IPKGService extends LunaServiceThread {
 		    valid = true; // %% Remove this %%%
 		    // %%% Check if signature is valid %%%
 		    if (valid) {
-			executePostinst(packageName, postinstPath, msg);
-			return;
+			if (executePostinst(packageName, postinstPath, msg)) {
+			    reply.put("stage","completed");
+			    msg.respond(reply.toString());
+			}
 		    }
 		    else {
 			reply.put("stage","failed");
@@ -570,7 +570,7 @@ public class IPKGService extends LunaServiceThread {
 	}
     }
 
-    private void executePrerm(String pkg, String prermPath, ServiceMessage msg)
+    private Boolean executePrerm(String pkg, String prermPath, ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret;
@@ -579,7 +579,7 @@ public class IPKGService extends LunaServiceThread {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during 'remount' operation");
 	    msg.respond(reply.toString());
-	    return;
+	    return false;
 	}
 	ret = executeCMD(prermPath);
 	reply.put("returnVal",ret.returnValue);
@@ -590,16 +590,17 @@ public class IPKGService extends LunaServiceThread {
 	msg.respond(reply.toString());
 	reply.remove("stdOut");
 	reply.remove("stdErr");
+	if (!lockRootfs(msg)) {
+	    // We're going to ignore failures from the remount
+	}
 	if (ret.returnValue!=0) {
 	    reply.put("stage","failed");
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during pre-remove script execution");
 	    msg.respond(reply.toString());
-	    return;
+	    return false;
 	}
-	if (!lockRootfs(msg)) {
-	    // We're going to ignore failures from the remount
-	}
+	return true;
     }
 
     private synchronized void doRemove(String packageName, String title, Boolean replace, ServiceMessage msg)
@@ -620,7 +621,9 @@ public class IPKGService extends LunaServiceThread {
 		valid = true; // %% Remove this %%%
 		// %%% Check if signature is valid %%%
 		if (valid) {
-		    executePrerm(packageName, prermPath, msg);
+		    if (!executePrerm(packageName, prermPath, msg)) {
+			return;
+		    }
 		    // pass-through
 		}
 		else {
@@ -990,7 +993,10 @@ public class IPKGService extends LunaServiceThread {
 				String postinstPath = ipkgScriptBasePath + pkg + ".postinst";
 				File postinst = new File(postinstPath);
 				if (postinst.exists()) {
-				    executePostinst(pkg, postinstPath, origmsg);
+				    if (executePostinst(pkg, postinstPath, origmsg)) {
+					reply.put("stage","completed");
+					origmsg.respond(reply.toString());
+				    }
 				} else {
 				    origmsg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
 							 "Internal error: Missing 'postinst' file");
@@ -1075,7 +1081,9 @@ public class IPKGService extends LunaServiceThread {
 				String prermPath = ipkgScriptBasePath + pkg + ".prerm";
 				File prerm = new File(prermPath);
 				if (prerm.exists()) {
-				    executePrerm(pkg, prermPath, origmsg);
+				    if (!executePrerm(pkg, prermPath, origmsg)) {
+					return;
+				    }
 				    // pass-through
 				} else {
 				    origmsg.respondError(ErrorMessage.ERROR_CODE_METHOD_EXCEPTION,
