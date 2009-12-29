@@ -1,7 +1,7 @@
 {
 	"title": "Package Manager Service",
 	"id": "org.webosinternals.ipkgservice",
-	"version": "0.9.24.3",
+	"version": "0.9.25",
 	"release_date":	"29-Dec-2009",
 	"vendor": "WebOS Internals",
 	"vendor_email":	"support@webos-internals.org",
