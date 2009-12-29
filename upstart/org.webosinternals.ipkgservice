@@ -9,6 +9,10 @@ script
 
    if [ -d /media/cryptofs/apps ] ; then
       APPS=/media/cryptofs/apps
+      mkdir -p $APPS/etc/ipkg/
+      if [ -f /var/etc/ipkg/arch.conf ] ; then
+	 mv /var/etc/ipkg/* $APPS/etc/ipkg/
+      fi  
    else
       APPS=/var
    fi
