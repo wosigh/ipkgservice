@@ -13,6 +13,17 @@ script
       if [ -f /var/etc/ipkg/arch.conf ] ; then
          mv /var/etc/ipkg/* $APPS/etc/ipkg/
       fi
+      if [ -d /var/usr/palm/applications ] ; then
+         for f in `ls -1 /var/usr/palm/applications/` ; do
+            if [ -d /var/usr/palm/applications/$f ] ; then
+               if [ -n "`find /var/usr/palm/applications/$f -type f`" ] ; then
+                  touch /var/usr/palm/applications/$f/appinfo.json
+	       else
+                  rm -rf /var/usr/palm/applications/$f
+	       fi
+	    fi
+         done
+      fi
    else
       APPS=/var
    fi
