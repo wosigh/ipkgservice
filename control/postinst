@@ -13,7 +13,7 @@ if [ -z "$IPKG_OFFLINE_ROOT" ]; then
 fi
 
 # Is the app limit fixed?
-if `grep /media/cryptofs/apps /etc/palm/luna.conf` ; then
+if grep -q /media/cryptofs/apps /etc/palm/luna.conf ; then
   APPS=/media/cryptofs/apps
 else
   APPS=/var
@@ -34,7 +34,9 @@ cp $IPKG_OFFLINE_ROOT/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/or
 
 # Transition the feed configuration files
 if [ "$IPKG_OFFLINE_ROOT" == "/var" -a "$APPS" == "/media/cryptofs/apps" ] ; then
-    cp $IPKG_OFFLINE_ROOT/etc/ipkg/* $APPS/etc/ipkg/
+    mkdir -p $APPS/etc/ipkg/
+    cp -L /var/etc/ipkg/* $APPS/etc/ipkg/
+    rm -rf /var/etc/ipkg
 fi
 
 # Set up the architecture configuration file
