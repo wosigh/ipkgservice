@@ -13,7 +13,7 @@ if [ -z "$IPKG_OFFLINE_ROOT" ]; then
 fi
 
 # Is the app limit fixed?
-if [ -d /media/cryptofs/apps ] ; then
+if `grep /media/cryptofs/apps /etc/palm/luna.conf` ; then
   APPS=/media/cryptofs/apps
 else
   APPS=/var

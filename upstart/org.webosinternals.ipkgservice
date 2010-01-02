@@ -7,7 +7,7 @@ start on started java-serviceboot
 script
    logger "org.webosinternals.ipkgservice upstart: script called"
 
-   if [ -d /media/cryptofs/apps ] ; then
+   if `grep /media/cryptofs/apps /etc/palm/luna.conf` ; then
       APPS=/media/cryptofs/apps
       if [ -f /var/etc/ipkg/arch.conf ] ; then
          mkdir -p $APPS/etc/ipkg/
