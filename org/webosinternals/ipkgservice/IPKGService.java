@@ -55,6 +55,7 @@ public class IPKGService extends LunaServiceThread {
     private File ipkgconfdir;
     private boolean ipkgReady = false;
     private boolean isEmulator = false;
+    private boolean isCryptofs = false;
     private SessionIDGenerator idgen = new SessionIDGenerator();
     private HashMap<String, ServiceMessage> confirmations = new HashMap<String, ServiceMessage>();
 
@@ -78,8 +79,9 @@ public class IPKGService extends LunaServiceThread {
     public IPKGService() {
 	File buildinfo = new File("/etc/palm-build-info");
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
-	File cryptofs = new File("/media/cryptofs/apps");
-	if (cryptofs.exists()) {
+	File lunaconf = new File("/etc/palm/luna.conf");
+	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
+	if (isCryptofs) {
 	    ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
