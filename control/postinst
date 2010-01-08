@@ -57,7 +57,12 @@ sed -i -e 's|armv6l|armv6|g' $APPS/etc/ipkg/optware.conf
 
 # Configure the webos-patches feed
 VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
-sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf
+if [ -f $APPS/etc/ipkg/webos-patches.conf ] ; then
+  sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf
+fi
+if [ -f $APPS/etc/ipkg/webos-patches.conf.disabled ] ; then
+  sed -i -e "s^/\(all\|[0-9.]*\)\$^/$VERSION^g" $APPS/etc/ipkg/webos-patches.conf.disabled
+fi  
 
 # Retain disabled status of feeds
 if [ "`ls $APPS/etc/ipkg/*.disabled`" ] ; then

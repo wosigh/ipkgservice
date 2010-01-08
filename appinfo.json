@@ -1,8 +1,8 @@
 {
 	"title": "Package Manager Service",
 	"id": "org.webosinternals.ipkgservice",
-	"version": "0.9.28",
-	"release_date":	"30-Dec-2009",
+	"version": "0.9.30",
+	"release_date":	"8-Jan-2010",
 	"vendor": "WebOS Internals",
 	"vendor_email":	"support@webos-internals.org",
 	"vendor_url": "http://www.webos-internals.org/wiki/Application:Preware",
