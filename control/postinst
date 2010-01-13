@@ -3,14 +3,8 @@
 # Remove obsolete ipkg wrapper
 rm -f /usr/local/bin/ipkg
 
-# Remove obsolete feeds
-rm -f /var/usr/lib/ipkg/lists/autopatch* /var/etc/ipkg/autopatch.conf*
-rm -f /var/usr/lib/ipkg/lists/preyourmind* /var/etc/ipkg/preyourmind.conf*
-rm -f /var/usr/lib/ipkg/lists/canuck-software* /var/etc/ipkg/canuck-software.conf*
-rm -f /var/usr/lib/ipkg/lists/pimpmypre* /var/etc/ipkg/pimpmypre.conf*
-
 if [ -z "$IPKG_OFFLINE_ROOT" ]; then
-  IPKG_OFFLINE_ROOT=/var
+  IPKG_OFFLINE_ROOT=/media/cryptofs/apps
 fi
 
 # Is the app limit fixed?
@@ -36,6 +30,12 @@ if [ "$IPKG_OFFLINE_ROOT" == "/var" -a "$APPS" == "/media/cryptofs/apps" ] ; the
     cp -L /var/etc/ipkg/* $APPS/etc/ipkg/
     rm -rf /var/etc/ipkg
 fi
+
+# Remove obsolete feeds
+rm -f $APPS/usr/lib/ipkg/lists/autopatch* $APPS/etc/ipkg/autopatch.conf*
+rm -f $APPS/usr/lib/ipkg/lists/preyourmind* $APPS/etc/ipkg/preyourmind.conf*
+rm -f $APPS/usr/lib/ipkg/lists/canuck-software* $APPS/etc/ipkg/canuck-software.conf*
+rm -f $APPS/usr/lib/ipkg/lists/pimpmypre* $APPS/etc/ipkg/pimpmypre.conf*
 
 # Set up the architecture configuration file
 rm -f $APPS/etc/ipkg/arch.conf
