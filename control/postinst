@@ -33,9 +33,10 @@ fi
 
 # Remove obsolete feeds
 rm -f $APPS/usr/lib/ipkg/lists/autopatch* $APPS/etc/ipkg/autopatch.conf*
-rm -f $APPS/usr/lib/ipkg/lists/preyourmind* $APPS/etc/ipkg/preyourmind.conf*
 rm -f $APPS/usr/lib/ipkg/lists/canuck-software* $APPS/etc/ipkg/canuck-software.conf*
 rm -f $APPS/usr/lib/ipkg/lists/pimpmypre* $APPS/etc/ipkg/pimpmypre.conf*
+rm -f $APPS/usr/lib/ipkg/lists/preware* $APPS/etc/ipkg/preware.conf*
+rm -f $APPS/usr/lib/ipkg/lists/preyourmind* $APPS/etc/ipkg/preyourmind.conf*
 
 # Set up the architecture configuration file
 rm -f $APPS/etc/ipkg/arch.conf
