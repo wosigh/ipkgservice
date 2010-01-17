@@ -82,7 +82,7 @@ public class IPKGService extends LunaServiceThread {
 	File lunaconf = new File("/etc/palm/luna.conf");
 	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
 	if (isCryptofs) {
-	    ipkgBaseCommand = "/usr/bin/ipkg -verbose_wget -o /media/cryptofs/apps ";
+	    ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
 	    ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
@@ -91,7 +91,7 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
 	}
 	else {
-	    ipkgBaseCommand = "/usr/bin/ipkg -verbose_wget -o /var ";
+	    ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
 	    ipkgOfflineRoot = "/var";
 	    ipkgConfigDirPath = "/var/etc/ipkg";
 	    ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
@@ -211,13 +211,14 @@ public class IPKGService extends LunaServiceThread {
      * @return A ReturnResult object containing the return value, stdout and stderr of
      * of the executed command.
      */
-    private ReturnResult executeCMD(String command) {
+    private ReturnResult executeCMD(String command, Boolean redirectErrorStream) {
 	int ret = 1;
 	Boolean override = false;
 	ArrayList<String> output = new ArrayList<String>();
 	ArrayList<String> errors = new ArrayList<String>();
 	try {
 	    ProcessBuilder builder = new ProcessBuilder(command.split(" "));
+	    builder.redirectErrorStream(redirectErrorStream);
 	    Map<String,String> env = builder.environment();
 	    env.put("IPKG_OFFLINE_ROOT", ipkgOfflineRoot);
 	    env.put("PKG_ROOT", "/");
@@ -233,7 +234,8 @@ public class IPKGService extends LunaServiceThread {
 	    
 	    String line;
 	    while ((line = bufferedstdoutreader.readLine()) != null) {
-		if (line.startsWith("Collected errors:")) {
+		if (line.startsWith("Collected errors:") ||
+		    line.startsWith("ipkg_download: ERROR:")) {
 		    errors.add(line);
 		    override = true;
 		}
@@ -277,7 +279,7 @@ public class IPKGService extends LunaServiceThread {
     private Boolean unlockRootfs(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (isEmulator) return true;
-	ReturnResult ret = executeCMD("/bin/mount -o remount,rw /");
+	ReturnResult ret = executeCMD("/bin/mount -o remount,rw /", false);
 	if (msg != null) {
 	    JSONObject reply = new JSONObject();
 	    reply.put("returnVal",ret.returnValue);
@@ -293,7 +295,7 @@ public class IPKGService extends LunaServiceThread {
     private Boolean lockRootfs(ServiceMessage msg)
 	throws JSONException, LSException {
 	if (isEmulator) return true;
-	ReturnResult ret = executeCMD("/bin/mount -o remount,ro /");
+	ReturnResult ret = executeCMD("/bin/mount -o remount,ro /", false);
 	if (msg != null) {
 	    JSONObject reply = new JSONObject();
 	    reply.put("returnVal",ret.returnValue);
@@ -442,7 +444,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doUpdate(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD(ipkgBaseCommand + "update");
+	ReturnResult ret = executeCMD(ipkgBaseCommand + "update", false);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut);
@@ -467,7 +469,7 @@ public class IPKGService extends LunaServiceThread {
 	    msg.respond(reply.toString());
 	    return false;
 	}
-	ret = executeCMD(postinstPath);
+	ret = executeCMD(postinstPath, false);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stage","postinst");
@@ -481,7 +483,7 @@ public class IPKGService extends LunaServiceThread {
 	}
 	if (ret.returnValue!=0) {
 	    // Remove the remnants of any package which was not installed properly
-	    ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
+	    ret = executeCMD(ipkgBaseCommand + "remove " + pkg, false);
 	    reply.put("returnVal",ret.returnValue);
 	    reply.put("returnValue",(ret.returnValue == 0));
 	    reply.put("stage","remove");
@@ -504,7 +506,7 @@ public class IPKGService extends LunaServiceThread {
     private synchronized void doInstall(String packageName, String title, ServiceMessage msg)
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName);
+	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName, false);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stage","install");
@@ -583,7 +585,7 @@ public class IPKGService extends LunaServiceThread {
 	    msg.respond(reply.toString());
 	    return false;
 	}
-	ret = executeCMD(prermPath);
+	ret = executeCMD(prermPath, false);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stage","prerm");
@@ -663,7 +665,7 @@ public class IPKGService extends LunaServiceThread {
 		return;
 	    }
 	}
-	ReturnResult ret = executeCMD(ipkgBaseCommand + "remove " + packageName);
+	ReturnResult ret = executeCMD(ipkgBaseCommand + "remove " + packageName, false);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stage","remove");
@@ -690,7 +692,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRescan(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("luna-send -n 1 palm://com.palm.applicationManager/rescan {}");
+	ReturnResult ret = executeCMD("luna-send -n 1 palm://com.palm.applicationManager/rescan {}", false);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut.toString());
 	reply.put("stdErr", ret.stdErr.toString());
@@ -704,7 +706,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRestartLuna(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("killall -HUP LunaSysMgr");
+	ReturnResult ret = executeCMD("killall -HUP LunaSysMgr", false);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut.toString());
 	reply.put("stdErr", ret.stdErr.toString());
@@ -718,7 +720,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRestartJava(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("killall java");
+	ReturnResult ret = executeCMD("killall java", false);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut.toString());
 	reply.put("stdErr", ret.stdErr.toString());
@@ -732,7 +734,7 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doRestartDevice(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
-	ReturnResult ret = executeCMD("tellbootie");
+	ReturnResult ret = executeCMD("tellbootie", false);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut.toString());
 	reply.put("stdErr", ret.stdErr.toString());
@@ -1021,7 +1023,7 @@ public class IPKGService extends LunaServiceThread {
 			    String pkg = origmsg.getJSONPayload().getString("package").trim();
 			    if (checkArg(pkg)) {
 				// Remove the remnants of any package which was not installed properly
-				ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
+				ret = executeCMD(ipkgBaseCommand + "remove " + pkg, false);
 				reply.put("returnVal",ret.returnValue);
 				reply.put("returnValue",(ret.returnValue == 0));
 				reply.put("stage","remove");
@@ -1092,7 +1094,7 @@ public class IPKGService extends LunaServiceThread {
 							 "Internal error: Missing 'prerm' file");
 				    return;
 				}
-				ret = executeCMD(ipkgBaseCommand + "remove " + pkg);
+				ret = executeCMD(ipkgBaseCommand + "remove " + pkg, false);
 				reply.put("returnVal",ret.returnValue);
 				reply.put("returnValue",(ret.returnValue == 0));
 				reply.put("stage","remove");
