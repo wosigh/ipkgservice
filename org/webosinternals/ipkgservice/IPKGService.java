@@ -82,7 +82,7 @@ public class IPKGService extends LunaServiceThread {
 	File lunaconf = new File("/etc/palm/luna.conf");
 	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
 	if (isCryptofs) {
-	    ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
+	    ipkgBaseCommand = "/usr/bin/ipkg -verbose_wget -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
 	    ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
@@ -91,7 +91,7 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
 	}
 	else {
-	    ipkgBaseCommand = "/usr/bin/ipkg -o /var ";
+	    ipkgBaseCommand = "/usr/bin/ipkg -verbose_wget -o /var ";
 	    ipkgOfflineRoot = "/var";
 	    ipkgConfigDirPath = "/var/etc/ipkg";
 	    ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
