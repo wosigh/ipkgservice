@@ -397,50 +397,6 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doGetIpkgWrapperState()
-	throws JSONException {
-	JSONObject reply = new JSONObject();
-	File wrapper;
-
-	reply.put("returnValue", false);
-	wrapper = new File("/usr/local/bin/ipkg.disabled");
-	if (wrapper.exists()) {
-	    reply.put("enabled", false);
-	    reply.put("returnValue", true);
-	}
-	wrapper = new File("/usr/local/bin/ipkg");
-	if (wrapper.exists()) {
-	    reply.put("enabled", true);
-	    reply.put("returnValue", true);
-	}
-	return reply;
-    }
-
-    private JSONObject doSetIpkgWrapperState(Boolean enabled)
-	throws JSONException, LSException {
-	JSONObject reply = new JSONObject();
-	Boolean status;
-	if (!unlockRootfs(null)) {
-	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
-	    reply.put("errorText", "Failure during 'remount' operation");
-	    reply.put("returnValue", 1);
-	    return reply;
-	}
-	if (enabled) {
-	    File config = new File("/usr/local/bin/ipkg.disabled");
-	    status = config.renameTo(new File("/usr/local/bin/ipkg"));
-	}
-	else {
-	    File config = new File("/usr/local/bin/ipkg");
-	    status = config.renameTo(new File("/usr/local/bin/ipkg.disabled"));
-	}
-	if (!lockRootfs(null)) {
-	    // We're going to ignore failures from the remount
-	}
-	reply.put("returnValue", status);
-	return reply;
-    }
-
     private JSONObject doUpdate(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
@@ -956,22 +912,6 @@ public class IPKGService extends LunaServiceThread {
     }
 	
     @LunaServiceThread.PublicMethod
-	public void getIpkgWrapperState(ServiceMessage msg)
-	throws JSONException, LSException {
-	msg.respond(doGetIpkgWrapperState().toString());
-    }
-	
-    @LunaServiceThread.PublicMethod
-	public void setIpkgWrapperState(ServiceMessage msg)
-	throws JSONException, LSException {
-	if (msg.getJSONPayload().has("enabled")) {
-	    msg.respond(doSetIpkgWrapperState(msg.getJSONPayload().getBoolean("enabled")).toString());
-	} else
-	    msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
-			     "Missing 'enabled' parameter");
-    }
-	
-    @LunaServiceThread.PublicMethod
 	public void confirmInstall(ServiceMessage msg)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
@@ -1337,7 +1277,7 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	reply.put("returnValue",true);
-	reply.put("apiVersion","9");
+	reply.put("apiVersion","10");
 	msg.respond(reply.toString());
     }
 
