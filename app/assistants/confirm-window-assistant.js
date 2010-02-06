@@ -19,11 +19,11 @@ ConfirmWindowAssistant.prototype.setup = function()
 	else if (this.params.type === "replace") this.controller.get('type').innerHTML = ' before replacement';
 	
 	// setup buttons
-	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok', buttonClass: 'affirmative'});
+	this.controller.setupWidget('ok-button', {}, {buttonLabel: $L('Ok'), buttonClass: 'affirmative'});
     Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
-	this.controller.setupWidget('view-button', {}, {buttonLabel: 'View'});
+	this.controller.setupWidget('view-button', {}, {buttonLabel: $L('View')});
     Mojo.Event.listen(this.controller.get('view-button'), Mojo.Event.tap, this.viewButton.bind(this));
-	this.controller.setupWidget('cancel-button', {}, {buttonLabel: 'Cancel', buttonClass: 'negative'});
+	this.controller.setupWidget('cancel-button', {}, {buttonLabel: $L('Cancel'), buttonClass: 'negative'});
     Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
 }
 

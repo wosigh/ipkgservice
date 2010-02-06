@@ -3,7 +3,7 @@ function ManualOpenAssistant(){}
 ManualOpenAssistant.prototype.setup = function()
 {
 	// setup buttons
-	this.controller.setupWidget('ok-button', {}, {buttonLabel: 'Ok. I\'ll ignore this icon.', buttonClass: 'affirmative'});
+	this.controller.setupWidget('ok-button', {}, {buttonLabel: $L('Ok. I\'ll ignore this icon.'), buttonClass: 'affirmative'});
     Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
 }
 
