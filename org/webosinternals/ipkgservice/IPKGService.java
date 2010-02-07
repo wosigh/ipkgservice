@@ -419,9 +419,14 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doUpdate(ServiceMessage msg)
+    private JSONObject doUpdate(ServiceMessage msg, Boolean subscribe)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
+	if (subscribe) {
+	    reply.put("stage", "update");
+	    reply.put("returnValue",true);
+	    msg.respond(reply.toString());
+	}
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "update", false, msg);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
@@ -430,6 +435,10 @@ public class IPKGService extends LunaServiceThread {
 	if (ret.returnValue!=0) {
 	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
 	    reply.put("errorText", "Failure during 'update' operation");
+	    reply.put("stage","failed");
+	}
+	else {
+	    reply.put("stage","completed");
 	}
 	return reply;
     }
@@ -819,8 +828,12 @@ public class IPKGService extends LunaServiceThread {
     @LunaServiceThread.PublicMethod
 	public void update(ServiceMessage msg)
 	throws JSONException, LSException {
+	Boolean subscribe = false;
 	if (ipkgReady) {
-	    JSONObject reply = doUpdate(msg);
+	    if (msg.getJSONPayload().has("subscribe") && msg.getJSONPayload().getBoolean("subscribe")) {
+		subscribe = true;
+	    }
+	    JSONObject reply = doUpdate(msg, subscribe);
 	    msg.respond(reply.toString());
 	} else
 	    ipkgDirNotReady(msg);
