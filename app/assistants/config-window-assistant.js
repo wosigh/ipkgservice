@@ -22,9 +22,9 @@ ConfigWindowAssistant.prototype.setup = function()
 	this.controller.get('url').innerHTML = this.params.url.replace(/http:\/\//, '');
 	
 	// setup buttons
-	this.controller.setupWidget('ok-button', {}, {buttonLabel: $L('Yes'), buttonClass: 'affirmative'});
+	this.controller.setupWidget('ok-button', {}, {buttonLabel: $L("Yes"), buttonClass: 'affirmative'});
     Mojo.Event.listen(this.controller.get('ok-button'), Mojo.Event.tap, this.okButton.bind(this));
-	this.controller.setupWidget('cancel-button', {}, {buttonLabel: $L('No'), buttonClass: 'negative'});
+	this.controller.setupWidget('cancel-button', {}, {buttonLabel: $L("No"), buttonClass: 'negative'});
     Mojo.Event.listen(this.controller.get('cancel-button'), Mojo.Event.tap, this.cancelButton.bind(this));
 }
 
