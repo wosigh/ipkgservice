@@ -88,7 +88,7 @@ AppAssistant.prototype.handleLaunch = function(params) {
 		}
 		else if (params.banner)
 		{
-			Mojo.Log.warn("Notifications not yet implemented.");
+			Mojo.Log.warn($L("Notifications not yet implemented."));
 		}
 
 	}
