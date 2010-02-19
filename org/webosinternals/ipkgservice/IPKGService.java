@@ -54,6 +54,7 @@ public class IPKGService extends LunaServiceThread {
 
     private File ipkgconfdir;
     private File tmpdir;
+    private String tmpdirPath = "/media/cryptofs/apps/usr/lib/ipkg/tmp";
     private boolean ipkgReady = false;
     private boolean isEmulator = false;
     private boolean isCryptofs = false;
@@ -83,7 +84,7 @@ public class IPKGService extends LunaServiceThread {
 	File lunaconf = new File("/etc/palm/luna.conf");
 	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
 	if (isCryptofs) {
-	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir /media/internal/.tmp -o /media/cryptofs/apps ";
+	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
 	    ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
@@ -92,7 +93,8 @@ public class IPKGService extends LunaServiceThread {
 	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
 	}
 	else {
-	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir /media/internal/.tmp -o /var ";
+	    tmpdirPath = "/var/usr/lib/ipkg/tmp";
+	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /var ";
 	    ipkgOfflineRoot = "/var";
 	    ipkgConfigDirPath = "/var/etc/ipkg";
 	    ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
@@ -107,13 +109,15 @@ public class IPKGService extends LunaServiceThread {
 	} else
 	    ipkgReady = ipkgconfdir.mkdirs();
 
-	tmpdir = new File("/media/internal/.tmp");
+	tmpdir = new File(tmpdirPath);
 	if (tmpdir.exists()) {
-	    if (! tmpdir.isDirectory())
-		tmpdir.mkdirs();
+		if (! tmpdir.isDirectory()) {
+			tmpdir.delete();
+			tmpdir.mkdirs();
+		}
 	}
 	else {
-	    tmpdir.mkdirs();
+		tmpdir.mkdirs();
 	}
     }
 
