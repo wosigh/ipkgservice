@@ -432,12 +432,16 @@ public class IPKGService extends LunaServiceThread {
     private JSONObject doUpdate(ServiceMessage msg, Boolean subscribe)
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
+	ReturnResult ret;
 	if (subscribe) {
 	    reply.put("stage", "update");
 	    reply.put("returnValue",true);
 	    msg.respond(reply.toString());
+	    ret = executeCMD(ipkgBaseCommand + "update", false, msg);
 	}
-	ReturnResult ret = executeCMD(ipkgBaseCommand + "update", false, msg);
+	else {
+	    ret = executeCMD(ipkgBaseCommand + "update", false, null);
+	}
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
 	reply.put("stdOut", ret.stdOut);
