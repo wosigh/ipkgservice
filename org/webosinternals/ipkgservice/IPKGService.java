@@ -53,8 +53,6 @@ public class IPKGService extends LunaServiceThread {
     private String ipkgApplicationBasePath;
 
     private File ipkgconfdir;
-    private File tmpdir;
-    private String tmpdirPath = "/media/cryptofs/apps/usr/lib/ipkg/tmp";
     private boolean ipkgReady = false;
     private boolean isEmulator = false;
     private boolean isCryptofs = false;
@@ -83,7 +81,9 @@ public class IPKGService extends LunaServiceThread {
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
 	File lunaconf = new File("/etc/palm/luna.conf");
 	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
+	String tmpdirPath;
 	if (isCryptofs) {
+	    tmpdirPath = "/media/cryptofs/apps/usr/lib/ipkg/tmp";
 	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /media/cryptofs/apps ";
 	    ipkgOfflineRoot = "/media/cryptofs/apps";
 	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
@@ -109,7 +109,7 @@ public class IPKGService extends LunaServiceThread {
 	} else
 	    ipkgReady = ipkgconfdir.mkdirs();
 
-	tmpdir = new File(tmpdirPath);
+	File tmpdir = new File(tmpdirPath);
 	if (tmpdir.exists()) {
 		if (! tmpdir.isDirectory()) {
 			tmpdir.delete();
