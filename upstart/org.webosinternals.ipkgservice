@@ -21,10 +21,10 @@ script
    # Configure the webos-patches feed
    VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
    if [ -f $APPS/etc/ipkg/webos-patches.conf ] ; then
-      sed -i -e "s^/\(all\|[0-9.]*\)\$^/${VERSION:-unknown}^g" $APPS/etc/ipkg/webos-patches.conf
+      echo "src/gz webos-patches http://ipkg.preware.org/feeds/webos-patches/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-patches.conf
    fi  
    if [ -f $APPS/etc/ipkg/webos-patches.conf.disabled ] ; then
-      sed -i -e "s^/\(all\|[0-9.]*\)\$^/${VERSION:-unknown}^g" $APPS/etc/ipkg/webos-patches.conf.disabled
+      echo "src/gz webos-patches http://ipkg.preware.org/feeds/webos-patches/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-patches.conf.disabled
    fi  
 
    sleep 10
