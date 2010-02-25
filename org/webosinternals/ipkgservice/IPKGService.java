@@ -165,6 +165,14 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	int filesize = (int)file.length();
+	if (filesize > 10485760) {
+	    reply.put("stage", "failed");
+	    reply.put("filesize", filesize);
+	    reply.put("errorCode", ErrorMessage.ERROR_CODE_METHOD_EXCEPTION);
+	    reply.put("errorText", "Requested feed listing is too large");
+	    reply.put("returnValue",false);
+	    return reply;
+	}
 	int datasize = 0;
 	int chunksize = 4096;
 	int size = 0;
