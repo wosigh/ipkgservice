@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# Is the app limit fixed?
+if grep -q /media/cryptofs/apps /etc/palm/luna.conf ; then
+  APPS=/media/cryptofs/apps
+else
+  APPS=/var
+fi
+
+# Remove all list database cache files
+rm -f $APPS/usr/lib/ipkg/lists/*
+
 # Remove the ipkg wrapper
 rm -f /usr/local/bin/ipkg
 

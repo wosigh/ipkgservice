@@ -38,7 +38,7 @@ rm -f $APPS/etc/ipkg/pimpmypre.conf*
 rm -f $APPS/etc/ipkg/preware.conf*
 rm -f $APPS/etc/ipkg/preyourmind.conf*
 
-# Remove old list files
+# Remove all list database cache files
 rm -f $APPS/usr/lib/ipkg/lists/*
 
 # Set up the architecture configuration file
