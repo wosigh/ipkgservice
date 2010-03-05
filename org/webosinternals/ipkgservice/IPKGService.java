@@ -436,8 +436,10 @@ public class IPKGService extends LunaServiceThread {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret;
 	File[] lists;
+	// Remove an old files
 	lists = ipkglistsdir.listFiles();
 	for (File file : lists) if (file.isFile()) file.delete();
+	// Empty the cache directory
 	lists = ipkgcachedir.listFiles();
 	for (File file : lists) if (file.isFile()) file.delete();
 	if (subscribe) {
@@ -461,6 +463,7 @@ public class IPKGService extends LunaServiceThread {
 	else {
 	    reply.put("stage","completed");
 	}
+	// Move the new files over to the cache directory
 	lists = ipkglistsdir.listFiles();
 	for (File file : lists) {
 	    if (file.isFile()) {
@@ -525,6 +528,14 @@ public class IPKGService extends LunaServiceThread {
     private synchronized void doInstall(String packageName, String title, ServiceMessage msg)
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	JSONObject reply = new JSONObject();
+	File[] lists;
+	// Move the cache files back to the lists directory
+	lists = ipkgcachedir.listFiles();
+	for (File file : lists) {
+	    if (file.isFile()) {
+		file.renameTo(new File(file.toString().replaceFirst(ipkgCacheBasePath, ipkgListsBasePath)));
+	    }
+	}
 	ReturnResult ret = executeCMD(ipkgBaseCommand + "install " + packageName, false, msg);
 	reply.put("returnVal",ret.returnValue);
 	reply.put("returnValue",(ret.returnValue == 0));
@@ -534,6 +545,13 @@ public class IPKGService extends LunaServiceThread {
 	msg.respond(reply.toString());
 	reply.remove("stdOut");
 	reply.remove("stdErr");
+	// Move the lists files back to the cache directory
+	lists = ipkglistsdir.listFiles();
+	for (File file : lists) {
+	    if (file.isFile()) {
+		file.renameTo(new File(file.toString().replaceFirst(ipkgListsBasePath, ipkgCacheBasePath)));
+	    }
+	}
 	if (ret.returnValue==0) {
 	    String postinstPath = ipkgScriptBasePath + packageName + ".postinst";
 	    File postinst = new File(postinstPath);
