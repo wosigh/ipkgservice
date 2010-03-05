@@ -9,6 +9,7 @@ fi
 
 # Remove all list database cache files
 rm -f $APPS/usr/lib/ipkg/lists/*
+rm -f $APPS/usr/lib/ipkg/cache/*
 
 # Remove the ipkg wrapper
 rm -f /usr/local/bin/ipkg

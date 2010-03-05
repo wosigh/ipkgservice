@@ -23,10 +23,13 @@ package org.webosinternals.ipkgservice;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,18 +47,20 @@ import org.json.JSONObject;
 public class IPKGService extends LunaServiceThread {
 
     /* ============================== Variables ==============================*/
-    private String ipkgBaseCommand;
-    private String ipkgOfflineRoot;
-    private String ipkgConfigDirPath;
-    private String ipkgScriptBasePath;
-    private String ipkgListsBasePath;
-    private String ipkgStatusPath;
-    private String ipkgApplicationBasePath;
+    private String ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
+    private String ipkgOfflineRoot = "/media/cryptofs/apps";
+    private String ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
+    private String ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
+    private String ipkgListsBasePath = "/media/cryptofs/apps/usr/lib/ipkg/lists/";
+    private String ipkgCacheBasePath = "/media/cryptofs/apps/usr/lib/ipkg/cache/";
+    private String ipkgStatusPath = "/media/cryptofs/apps/usr/lib/ipkg/status";
+    private String ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
 
     private File ipkgconfdir;
+    private File ipkglistsdir;
+    private File ipkgcachedir;
     private boolean ipkgReady = false;
     private boolean isEmulator = false;
-    private boolean isCryptofs = false;
     private SessionIDGenerator idgen = new SessionIDGenerator();
     private HashMap<String, ServiceMessage> confirmations = new HashMap<String, ServiceMessage>();
 
@@ -79,45 +84,31 @@ public class IPKGService extends LunaServiceThread {
     public IPKGService() {
 	File buildinfo = new File("/etc/palm-build-info");
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
-	File lunaconf = new File("/etc/palm/luna.conf");
-	isCryptofs = readFile(lunaconf, " ").contains("/media/cryptofs/apps");
-	String tmpdirPath;
-	if (isCryptofs) {
-	    tmpdirPath = "/media/cryptofs/apps/usr/lib/ipkg/tmp";
-	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /media/cryptofs/apps ";
-	    ipkgOfflineRoot = "/media/cryptofs/apps";
-	    ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
-	    ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
-	    ipkgListsBasePath = "/media/cryptofs/apps/usr/lib/ipkg/lists/";
-	    ipkgStatusPath = "/media/cryptofs/apps/usr/lib/ipkg/status";
-	    ipkgApplicationBasePath = "/media/cryptofs/apps/usr/palm/applications/";
-	}
-	else {
-	    tmpdirPath = "/var/usr/lib/ipkg/tmp";
-	    ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /var ";
-	    ipkgOfflineRoot = "/var";
-	    ipkgConfigDirPath = "/var/etc/ipkg";
-	    ipkgScriptBasePath = "/var/usr/lib/ipkg/info/";
-	    ipkgListsBasePath = "/var/usr/lib/ipkg/lists/";
-	    ipkgStatusPath = "/var/usr/lib/ipkg/status";
-	    ipkgApplicationBasePath = "/var/usr/palm/applications/";
-	}
 	ipkgconfdir = new File(ipkgConfigDirPath);
 	if (ipkgconfdir.exists()) {
 	    if (ipkgconfdir.isDirectory())
 		ipkgReady = true;
 	} else
 	    ipkgReady = ipkgconfdir.mkdirs();
-
-	File tmpdir = new File(tmpdirPath);
-	if (tmpdir.exists()) {
-		if (! tmpdir.isDirectory()) {
-			tmpdir.delete();
-			tmpdir.mkdirs();
+	ipkglistsdir = new File(ipkgListsBasePath);
+	if (ipkglistsdir.exists()) {
+		if (! ipkglistsdir.isDirectory()) {
+			ipkglistsdir.delete();
+			ipkglistsdir.mkdirs();
 		}
 	}
 	else {
-		tmpdir.mkdirs();
+		ipkglistsdir.mkdirs();
+	}
+	ipkgcachedir = new File(ipkgCacheBasePath);
+	if (ipkgcachedir.exists()) {
+		if (! ipkgcachedir.isDirectory()) {
+			ipkgcachedir.delete();
+			ipkgcachedir.mkdirs();
+		}
+	}
+	else {
+		ipkgcachedir.mkdirs();
 	}
     }
 
@@ -403,7 +394,7 @@ public class IPKGService extends LunaServiceThread {
 	return reply;
     }
 
-    private JSONObject doDeleteConfig(String config, String name, String url, ServiceMessage msg)
+    private JSONObject doDeleteConfig(String config, String name, ServiceMessage msg)
 	throws JSONException, NoSuchAlgorithmException {
 	JSONObject reply = new JSONObject();
 	File configfile = new File(ipkgConfigDirPath+"/"+config);
@@ -414,7 +405,6 @@ public class IPKGService extends LunaServiceThread {
 	    String hash = idgen.nextSessionId();
 	    params.put("config", config);
 	    params.put("name", name);
-	    params.put("url", url);
 	    params.put("type", "delete");
 	    params.put("hash", hash);
 	    parameters.put("id","org.webosinternals.ipkgservice");
@@ -445,6 +435,11 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException {
 	JSONObject reply = new JSONObject();
 	ReturnResult ret;
+	File[] lists;
+	lists = ipkglistsdir.listFiles();
+	for (File file : lists) if (file.isFile()) file.delete();
+	lists = ipkgcachedir.listFiles();
+	for (File file : lists) if (file.isFile()) file.delete();
 	if (subscribe) {
 	    reply.put("stage", "update");
 	    reply.put("returnValue",true);
@@ -465,6 +460,17 @@ public class IPKGService extends LunaServiceThread {
 	}
 	else {
 	    reply.put("stage","completed");
+	}
+	lists = ipkglistsdir.listFiles();
+	for (File file : lists) {
+	    if (file.isFile()) {
+		if (file.length() > 10485760) {
+		    file.delete();
+		}
+		else {
+		    file.renameTo(new File(file.toString().replaceFirst(ipkgListsBasePath, ipkgCacheBasePath)));
+		}
+	    }
 	}
 	return reply;
     }
@@ -760,7 +766,7 @@ public class IPKGService extends LunaServiceThread {
 
     private JSONObject getRawList(String feedName, ServiceMessage msg, Boolean subscribe)
 	throws JSONException, LSException {
-	String filename = ipkgListsBasePath + feedName;
+	String filename = ipkgCacheBasePath + feedName;
 	File listfile = new File(filename);
 	if (listfile.exists()) {
 	    return readList(listfile, msg, subscribe);
@@ -939,11 +945,9 @@ public class IPKGService extends LunaServiceThread {
 	throws JSONException, LSException, NoSuchAlgorithmException {
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("config") &&
-		msg.getJSONPayload().has("name") &&
-		msg.getJSONPayload().has("url")) {
+		msg.getJSONPayload().has("name")) {
 		JSONObject reply = doDeleteConfig(msg.getJSONPayload().getString("config").trim(),
 						  msg.getJSONPayload().getString("name").trim(),
-						  msg.getJSONPayload().getString("url").trim(),
 						  msg);
 		if (reply!=null)
 		    msg.respond(reply.toString());
@@ -953,7 +957,7 @@ public class IPKGService extends LunaServiceThread {
 	    }
 	    else {
 		msg.respondError(ErrorMessage.ERROR_CODE_INVALID_PARAMETER,
-				 "Missing 'config', 'name' or 'url' parameter");
+				 "Missing 'config' or 'name' parameter");
 	    }
 	} else
 	    ipkgDirNotReady(msg);
@@ -1154,7 +1158,7 @@ public class IPKGService extends LunaServiceThread {
     
     @LunaServiceThread.PublicMethod
 	public void confirmAdd(ServiceMessage msg)
-	throws JSONException, LSException {
+	throws JSONException, LSException, FileNotFoundException {
 	JSONObject reply = new JSONObject();
 	if (ipkgReady) {
 	    if (msg.getJSONPayload().has("hash") && msg.getJSONPayload().has("confirmation")) {
@@ -1166,10 +1170,25 @@ public class IPKGService extends LunaServiceThread {
 		    reply.put("returnValue",true);
 		    msg.respond(reply.toString());
 		    if (confirmation) {
-			if (origmsg.getJSONPayload().has("config")) {
+			if (origmsg.getJSONPayload().has("config") &&
+			    origmsg.getJSONPayload().has("name") &&
+			    origmsg.getJSONPayload().has("url") &&
+			    origmsg.getJSONPayload().has("gzip")) {
 			    String config = origmsg.getJSONPayload().getString("config").trim();
+			    String name = origmsg.getJSONPayload().getString("name").trim();
+			    String url = origmsg.getJSONPayload().getString("url").trim();
+			    boolean gzip = origmsg.getJSONPayload().getBoolean("gzip");
 			    if (checkArg(config)) {
-				// DO STUFF HERE
+				File conffile = new File(ipkgConfigDirPath + "/" + config);
+				PrintStream fout = new PrintStream(new FileOutputStream(conffile));
+				if (gzip) {
+				    fout.print("src/gz ");
+				}
+				else {
+				    fout.print("src ");
+				}
+				fout.println(name + " " + url);
+				fout.close();
 				reply.put("stage","completed");
 				origmsg.respond(reply.toString());
 			    } else {
@@ -1218,7 +1237,8 @@ public class IPKGService extends LunaServiceThread {
 			if (origmsg.getJSONPayload().has("config")) {
 			    String config = origmsg.getJSONPayload().getString("config").trim();
 			    if (checkArg(config)) {
-				// DO STUFF HERE
+				File conffile = new File(ipkgConfigDirPath + "/" + config);
+				conffile.delete();
 				reply.put("stage","completed");
 				origmsg.respond(reply.toString());
 			    } else {
