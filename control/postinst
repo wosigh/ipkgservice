@@ -1,18 +1,12 @@
 #!/bin/sh
 
-# Remove obsolete ipkg wrapper
-rm -f /usr/local/bin/ipkg
-
+# Handle execution as pmPostInstall.script
 if [ -z "$IPKG_OFFLINE_ROOT" ]; then
   IPKG_OFFLINE_ROOT=/media/cryptofs/apps
+  mount -o remount,rw /
 fi
 
-# Is the app limit fixed?
-if grep -q /media/cryptofs/apps /etc/palm/luna.conf ; then
-  APPS=/media/cryptofs/apps
-else
-  APPS=/var
-fi
+APPS=/media/cryptofs/apps
 
 # Install the java dbus service
 rm -f /usr/lib/luna/java/org.webosinternals.ipkgservice.jar
@@ -23,20 +17,6 @@ cp $IPKG_OFFLINE_ROOT/usr/share/dbus-1/system-services/org.webosinternals.ipkgse
 # Install the upstart script
 rm -f /etc/event.d/org.webosinternals.ipkgservice
 cp $IPKG_OFFLINE_ROOT/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinternals.ipkgservice
-
-# Transition the feed configuration files
-if [ "$IPKG_OFFLINE_ROOT" == "/var" -a "$APPS" == "/media/cryptofs/apps" ] ; then
-    mkdir -p $APPS/etc/ipkg/
-    cp -L /var/etc/ipkg/* $APPS/etc/ipkg/
-    rm -rf /var/etc/ipkg
-fi
-
-# Remove obsolete feeds
-rm -f $APPS/etc/ipkg/autopatch.conf*
-rm -f $APPS/etc/ipkg/canuck-software.conf*
-rm -f $APPS/etc/ipkg/pimpmypre.conf*
-rm -f $APPS/etc/ipkg/preware.conf*
-rm -f $APPS/etc/ipkg/preyourmind.conf*
 
 # Remove all list database cache files
 rm -f $APPS/usr/lib/ipkg/lists/*

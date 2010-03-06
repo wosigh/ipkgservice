@@ -1,18 +1,16 @@
 #!/bin/sh
 
-# Is the app limit fixed?
-if grep -q /media/cryptofs/apps /etc/palm/luna.conf ; then
-  APPS=/media/cryptofs/apps
-else
-  APPS=/var
+# Handle execution as pmPreRemove.script
+if [ -z "$IPKG_OFFLINE_ROOT" ]; then
+  IPKG_OFFLINE_ROOT=/media/cryptofs/apps
+  mount -o remount,rw /
 fi
+
+APPS=/media/cryptofs/apps
 
 # Remove all list database cache files
 rm -f $APPS/usr/lib/ipkg/lists/*
 rm -f $APPS/usr/lib/ipkg/cache/*
-
-# Remove the ipkg wrapper
-rm -f /usr/local/bin/ipkg
 
 # Stop the service
 /sbin/stop org.webosinternals.ipkgservice
