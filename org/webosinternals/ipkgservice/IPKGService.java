@@ -788,8 +788,11 @@ public class IPKGService extends LunaServiceThread {
 	File listfile = new File(filename);
 	if (listfile.exists()) {
 	    return readList(listfile, msg, subscribe);
-	} else
-	    return null;
+	} else {
+	    JSONObject reply = new JSONObject();
+	    reply.put("returnValue",true);
+	    return reply;
+	}
     }
 
     private JSONObject getRawStatus(ServiceMessage msg)
@@ -798,8 +801,11 @@ public class IPKGService extends LunaServiceThread {
 	File statusfile = new File(filename);
 	if (statusfile.exists()) {
 	    return readList(statusfile, msg, false);
-	} else
-	    return null;
+	} else {
+	    JSONObject reply = new JSONObject();
+	    reply.put("returnValue",true);
+	    return reply;
+	}
     }
 
     private JSONObject getRawControl(String packageId, ServiceMessage msg)
@@ -808,8 +814,11 @@ public class IPKGService extends LunaServiceThread {
 	File controlfile = new File(filename);
 	if (controlfile.exists()) {
 	    return readList(controlfile, msg, false);
-	} else
-	    return null;
+	} else {
+	    JSONObject reply = new JSONObject();
+	    reply.put("returnValue",true);
+	    return reply;
+	}
     }
 
     private JSONObject getRawAppinfo(String packageId, ServiceMessage msg)
@@ -818,8 +827,11 @@ public class IPKGService extends LunaServiceThread {
 	File appinfofile = new File(filename);
 	if (appinfofile.exists()) {
 	    return readList(appinfofile, msg, false);
-	} else
-	    return null;
+	} else {
+	    JSONObject reply = new JSONObject();
+	    reply.put("returnValue",true);
+	    return reply;
+	}
     }
 
     /* ============================ DBUS Methods =============================*/
