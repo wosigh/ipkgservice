@@ -47,7 +47,8 @@ import org.json.JSONObject;
 public class IPKGService extends LunaServiceThread {
 
     /* ============================== Variables ==============================*/
-    private String ipkgBaseCommand = "/usr/bin/ipkg -o /media/cryptofs/apps ";
+    private String tmpdirPath = "/media/cryptofs/apps/usr/lib/ipkg/tmp";
+    private String ipkgBaseCommand = "/usr/bin/ipkg --tmp-dir " + tmpdirPath + " -o /media/cryptofs/apps ";
     private String ipkgOfflineRoot = "/media/cryptofs/apps";
     private String ipkgConfigDirPath = "/media/cryptofs/apps/etc/ipkg";
     private String ipkgScriptBasePath = "/media/cryptofs/apps/usr/lib/ipkg/info/";
@@ -82,14 +83,17 @@ public class IPKGService extends LunaServiceThread {
      * Create a new IPKGService
      */
     public IPKGService() {
+
 	File buildinfo = new File("/etc/palm-build-info");
 	isEmulator = readFile(buildinfo, " ").contains("BUILDNAME=Nova-SDK");
+
 	ipkgconfdir = new File(ipkgConfigDirPath);
 	if (ipkgconfdir.exists()) {
 	    if (ipkgconfdir.isDirectory())
 		ipkgReady = true;
 	} else
 	    ipkgReady = ipkgconfdir.mkdirs();
+
 	ipkglistsdir = new File(ipkgListsBasePath);
 	if (ipkglistsdir.exists()) {
 		if (! ipkglistsdir.isDirectory()) {
@@ -100,6 +104,7 @@ public class IPKGService extends LunaServiceThread {
 	else {
 		ipkglistsdir.mkdirs();
 	}
+
 	ipkgcachedir = new File(ipkgCacheBasePath);
 	if (ipkgcachedir.exists()) {
 		if (! ipkgcachedir.isDirectory()) {
@@ -109,6 +114,17 @@ public class IPKGService extends LunaServiceThread {
 	}
 	else {
 		ipkgcachedir.mkdirs();
+	}
+
+	File tmpdir = new File(tmpdirPath);
+	if (tmpdir.exists()) {
+	    if (! tmpdir.isDirectory()) {
+		tmpdir.delete();
+		tmpdir.mkdirs();
+	    }
+	}
+	else {
+	    tmpdir.mkdirs();
 	}
     }
 
