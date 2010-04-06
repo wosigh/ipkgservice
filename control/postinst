@@ -20,6 +20,9 @@ cp $IPKG_OFFLINE_ROOT/usr/share/dbus-1/system-services/org.webosinternals.ipkgse
 rm -f /etc/event.d/org.webosinternals.ipkgservice
 cp $IPKG_OFFLINE_ROOT/etc/event.d/org.webosinternals.ipkgservice /etc/event.d/org.webosinternals.ipkgservice
 
+# Create the ipkg config and database areas
+mkdir -p $APPS/etc/ipkg $APPS/usr/lib/ipkg
+
 # Remove all list database cache files
 rm -f $APPS/usr/lib/ipkg/lists/*
 
