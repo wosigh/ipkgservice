@@ -21,13 +21,22 @@ script
    # Remove erroneously large list database cache files
    find $APPS/usr/lib/ipkg/lists -size +10240k -delete
 
-   # Configure the webos-patches feed
    VERSION=`grep PRODUCT_VERSION_STRING /etc/palm-build-info | sed -e 's/.*=Palm webOS \([0-9.]*\).*/\1/'`
+
+   # Configure the webos-patches feed
    if [ -f $APPS/etc/ipkg/webos-patches.conf ] ; then
       echo "src/gz webos-patches http://ipkg.preware.org/feeds/webos-patches/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-patches.conf
    fi  
    if [ -f $APPS/etc/ipkg/webos-patches.conf.disabled ] ; then
       echo "src/gz webos-patches http://ipkg.preware.org/feeds/webos-patches/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-patches.conf.disabled
+   fi  
+
+   # Configure the webos-kernels feed
+   if [ -f $APPS/etc/ipkg/webos-kernels.conf ] ; then
+      echo "src/gz webos-kernels http://ipkg.preware.org/feeds/webos-kernels/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-kernels.conf
+   fi  
+   if [ -f $APPS/etc/ipkg/webos-kernels.conf.disabled ] ; then
+      echo "src/gz webos-kernels http://ipkg.preware.org/feeds/webos-kernels/${VERSION:-unknown}" > $APPS/etc/ipkg/webos-kernels.conf.disabled
    fi  
 
    sleep 10
